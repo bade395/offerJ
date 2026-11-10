@@ -1245,5 +1245,5 @@ body.quote-read-only #document-to-pdf input,
 body.quote-read-only #document-to-pdf textarea,
 body.quote-read-only #document-to-pdf select,
 body.quote-read-only #document-to-pdf button { pointer-events: none !important; }
-body.quote-read-only .control-actions > :not(#btn-export-pdf-mobile) { display: none !important; }
+body.quote-read-only .control-actions > :not(#btn-export-pdf-mobile):not(#btn-history):not(#btn-manager-login) { display: none !important; }
 body.quote-read-only #btn-export-pdf-mobile { display: inline-flex !important; }
