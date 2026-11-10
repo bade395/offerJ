@@ -1114,6 +1114,9 @@ document.addEventListener('DOMContentLoaded', () => {
         closeHistoryModal();
         currentEditingQuoteId = null;
         lastSavedQuoteId = null;
+        quoteReadOnly = false;
+        document.body.classList.remove('quote-read-only');
+        document.getElementById('document-to-pdf').inert = false;
         if (btnSaveQuote) btnSaveQuote.hidden = true;
         alert('تم تسجيل خروج المدير.');
     }
