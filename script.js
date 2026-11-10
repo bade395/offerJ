@@ -29,6 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
     ];
 
     let items = JSON.parse(JSON.stringify(defaultItems));
+    let quoteReadOnly = false;
 
     const itemsTbody = document.getElementById('items-tbody');
     const itemsTbody2 = document.getElementById('items-tbody-2');
@@ -1147,7 +1148,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 <td>
                     <div class="quote-history-action">
                         ${row.pdf_path ? `<button type="button" class="quote-history-pdf" data-pdf-quote="${escapeHtml(row.id)}">PDF</button>` : '<span class="quote-history-no-pdf">بدون PDF</span>'}
-                        <button type="button" class="quote-history-edit" data-open-quote="${escapeHtml(row.id)}">فتح وتعديل</button>
+                        <button type="button" class="quote-history-open" data-view-quote="${escapeHtml(row.id)}">فتح</button>
+                        <button type="button" class="quote-history-edit" data-edit-quote="${escapeHtml(row.id)}">تعديل</button>
                         <button type="button" class="quote-history-delete" data-delete-quote="${escapeHtml(row.id)}">حذف</button>
                     </div>
                 </td>
@@ -1184,13 +1186,15 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    async function openSavedQuote(id) {
+    async function openSavedQuote(id, mode = 'edit') {
         if (!isManager || !supabaseClient || !id) return;
         try {
             const { data, error } = await supabaseClient.from('quotes').select('*').eq('id', id).single();
             if (error) throw error;
             if (!data) return;
             suppressDirty = true;
+            quoteReadOnly = mode === 'view';
+            document.body.classList.toggle('quote-read-only', quoteReadOnly);
             currentEditingQuoteId = data.id;
             lastSavedQuoteId = data.id;
             items = Array.isArray(data.items) && data.items.length ? JSON.parse(JSON.stringify(data.items)) : JSON.parse(JSON.stringify(defaultItems));
@@ -1206,14 +1210,37 @@ document.addEventListener('DOMContentLoaded', () => {
             suppressDirty = false;
             quoteDirty = false;
             lastSavedFingerprint = fingerprintQuote(buildQuotePayload());
-            if (btnSaveQuote) btnSaveQuote.hidden = false;
+            if (btnSaveQuote) btnSaveQuote.hidden = quoteReadOnly;
             closeHistoryModal();
             window.scrollTo({ top: 0, behavior: 'smooth' });
-            alert(`✓ تم فتح عرض السعر ${data.quote_ref} في وضع المدير.`);
+            alert(quoteReadOnly
+                ? `تم فتح عرض السعر ${data.quote_ref} للمعاينة فقط. لا يمكن تعديل بياناته.`
+                : `تم فتح عرض السعر ${data.quote_ref} في وضع التعديل.`);
         } catch (error) {
             suppressDirty = false;
             console.error('Open quote error:', error);
             alert(`تعذر فتح العرض.\n${error.message || error}`);
+        }
+    }
+
+    async function exportSavedQuotePdf(id) {
+        if (!isManager || !supabaseClient || !id) return;
+        try {
+            // Load the saved quote in preview mode and use the exact mobile PDF renderer.
+            await openSavedQuote(id, 'view');
+            if (currentEditingQuoteId !== id || !quoteReadOnly) return;
+            const generated = await buildPdfBlob('mobile');
+            const url = URL.createObjectURL(generated.blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = generated.filename;
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            setTimeout(() => URL.revokeObjectURL(url), 30000);
+        } catch (error) {
+            console.error('Saved quote mobile PDF error:', error);
+            alert(`تعذر إنشاء PDF للعرض المحفوظ.\n${error.message || error}`);
         }
     }
 
@@ -1250,10 +1277,12 @@ document.addEventListener('DOMContentLoaded', () => {
         historySearch._timer = setTimeout(loadQuoteHistory, 300);
     });
     if (historyTbody) historyTbody.addEventListener('click', event => {
-        const openButton = event.target.closest('[data-open-quote]');
-        if (openButton) openSavedQuote(openButton.getAttribute('data-open-quote'));
+        const viewButton = event.target.closest('[data-view-quote]');
+        if (viewButton) openSavedQuote(viewButton.getAttribute('data-view-quote'), 'view');
+        const editButton = event.target.closest('[data-edit-quote]');
+        if (editButton) openSavedQuote(editButton.getAttribute('data-edit-quote'), 'edit');
         const pdfButton = event.target.closest('[data-pdf-quote]');
-        if (pdfButton) downloadSavedQuotePdf(pdfButton.getAttribute('data-pdf-quote'));
+        if (pdfButton) exportSavedQuotePdf(pdfButton.getAttribute('data-pdf-quote'));
         const deleteButton = event.target.closest('[data-delete-quote]');
         if (deleteButton) deleteSavedQuote(deleteButton.getAttribute('data-delete-quote'));
     });
