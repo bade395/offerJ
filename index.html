@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>منظومة عروض الأسعار - شركة النسر الثاقب لتأجير السيارات</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Rubik:ital,wght@0,300..900;1,300..900&family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+
+    <!-- مكتبات التصدير إلى PDF: يتم الرسم على Canvas بمقاس A4 ثابت ثم وضع كل صفحة داخل jsPDF.
+         هذا الأسلوب يمنع اختلافات viewport الجوال من تغيير المقاس أو الاتجاه. -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body>
+
+    <!-- Dynamic Control Panel -->
+    <header class="admin-control-bar no-print">
+        <div class="control-bar-container">
+            <div class="brand-info">
+                <div class="brand-badge">
+                    <img src="https://i.postimg.cc/Pfm5Rvd0/logo.png" width="32" height="32" alt="Logo">
+                    <span>منظومة إعداد عروض الأسعار (النسر الثاقب)</span>
+                </div>
+            </div>
+
+            <div class="control-actions">
+                <button type="button" class="btn btn-add" id="btn-add-item">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+                    إضافة بند
+                </button>
+                <button type="button" class="btn btn-regenerate" id="btn-gen-ref">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+                    تجديد الرقم والتاريخ
+                </button>
+                <button type="button" class="btn btn-reset" id="btn-reset">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                    إعادة ضبط
+                </button>
+                <button type="button" class="btn btn-manager" id="btn-manager-login" title="دخول المدير">
+                    <span aria-hidden="true">🔐</span>
+                    دخول المدير
+                </button>
+                <button type="button" class="btn btn-save-quote manager-only" id="btn-save-quote" title="حفظ تعديل المدير" hidden>
+                    <span aria-hidden="true">💾</span>
+                    حفظ تعديل المدير
+                </button>
+                <button type="button" class="btn btn-history manager-only" id="btn-history" title="سجل العروض - للمدير فقط" hidden>
+                    <span aria-hidden="true">📋</span>
+                    سجل العروض
+                </button>
+                <button type="button" class="btn btn-print" id="btn-print">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                    طباعة العرض
+                </button>
+                <button type="button" class="btn btn-export-pdf btn-export-mobile" id="btn-export-pdf-mobile" title="تصدير PDF مضبوط للجوال">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="7" y="2" width="10" height="20" rx="2"/><line x1="10" y1="5" x2="14" y2="5"/><circle cx="12" cy="18" r="1"/></svg>
+                    PDF للجوال
+                </button>
+                <button type="button" class="btn btn-export-pdf btn-export-desktop" id="btn-export-pdf-desktop" title="تصدير PDF مطابق لطباعة الكمبيوتر">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="4" width="18" height="13" rx="1.5"/><path d="M8 21h8M12 17v4"/></svg>
+                    PDF للكمبيوتر
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="document-wrapper" id="document-to-pdf">
+        
+        <!-- PAGE 1 -->
+        <div class="a4-page page-1">
+            <header class="doc-header-fixed">
+                <div class="company-brand">
+                    <h1 class="company-title">النسر الثاقب</h1>
+                    <p class="company-sub">السجل التجاري 7054465872</p>
+                    <p class="company-sub">الرقم الضريبي 314823033100003</p>
+                </div>
+                <div class="company-logo">
+                    <img src="https://i.postimg.cc/Pfm5Rvd0/logo.png" alt="شعار النسر الثاقب" class="official-logo-img">
+                </div>
+            </header>
+
+            <div class="doc-inner-body">
+                <div class="content-block">
+                    <div class="doc-title-bar">
+                        <h2 class="doc-title">عرض اسعار</h2>
+                    </div>
+
+                    <div class="doc-meta-row">
+                        <div class="meta-item date-meta">
+                            <span class="meta-label">التاريخ : -</span>
+                            <input type="text" id="quote-date" class="meta-input editable-field" value="2026/08/02 م">
+                        </div>
+                        <div class="meta-item ref-meta">
+                            <span class="meta-label">عرض سعر رقم : -</span>
+                            <input type="text" id="quote-ref" class="meta-input editable-field" value="020826 PE110">
+                        </div>
+                    </div>
+
+                    <section class="client-section">
+                        <div class="client-row">
+                            <span class="client-prefix">السادة /</span>
+                            <input type="text" id="client-name" class="client-input editable-field" placeholder="شركة المهمة الذكية لخدمات الأعمال" value="">
+                            <span class="client-suffix">المحترمين</span>
+                        </div>
+                        <p class="greeting-text">تحية طيبة وبعد؛</p>
+                        <p class="intro-text">يسعدنا ان نقدم لكم عرض السعر الخاصة بخدمة تأجير المركبات والموضح بياناتها في الجدول التالي</p>
+                    </section>
+
+                    <section class="items-table-section" id="table-section-1">
+                        <table class="quote-table" id="items-table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 47%;">البيان<br><span class="en-head">Description</span></th>
+                                    <th style="width: 8%;">الكمية<br><span class="en-head">Qty</span></th>
+                                    <th style="width: 12%;">سعر الوحدة<br><span class="en-head">Unit Price</span></th>
+                                    <th style="width: 10%;">الإجمالي<br><span class="en-head">TOTAL</span></th>
+                                    <th style="width: 10%;">الضريبة 15%<br><span class="en-head">VAT 15%</span></th>
+                                    <th style="width: 10%;">الإجمالي مع الضريبة<br><span class="en-head">Total with VAT</span></th>
+                                    <th class="no-print row-action-col" style="width: 3%;"></th>
+                                </tr>
+                            </thead>
+                            <tbody id="items-tbody">
+                                <!-- Dynamic Rows Page 1 -->
+                            </tbody>
+                        </table>
+                    </section>
+
+                    <div id="quote-summary-and-stamp">
+                        <div class="totals-summary-container">
+                            <table class="totals-table">
+                                <colgroup>
+                                    <col style="width:65%">
+                                    <col style="width:35%">
+                                </colgroup>
+                                <tr>
+                                    <td class="total-label">الإجمالي TOTAL</td>
+                                    <td class="total-value total-cell"><img src="https://www.sama.gov.sa/ar-sa/Currency/Documents/Saudi_Riyal_Symbol-2.svg" alt="ر.س" class="riyal-symbol">&nbsp;<span id="sum-net">0.00</span></td>
+                                </tr>
+                                <tr>
+                                    <td class="total-label">الضريبة %15 VAT</td>
+                                    <td class="total-value total-cell"><img src="https://www.sama.gov.sa/ar-sa/Currency/Documents/Saudi_Riyal_Symbol-2.svg" alt="ر.س" class="riyal-symbol">&nbsp;<span id="sum-vat">0.00</span></td>
+                                </tr>
+                                <tr class="grand-total-row">
+                                    <td class="total-label">الإجمالي مع الضريبة Total&nbsp;with&nbsp;VAT</td>
+                                    <td class="total-value total-cell"><img src="https://www.sama.gov.sa/ar-sa/Currency/Documents/Saudi_Riyal_Symbol-2.svg" alt="ر.س" class="riyal-symbol">&nbsp;<span id="sum-grand">0.00</span></td>
+                                </tr>
+                            </table>
+                        </div>
+
+                        <div class="closing-section-wrapper">
+                            <p class="closing-wish">املين ان ينال عرضنا هذا رضاكم</p>
+                            <div class="closing-salutation-bottom">
+                                <p class="salutation-text">،مع خالص التحية والتقدير</p>
+                                <div class="company-sign-wrapper">
+                                    <h4 class="company-sign-title">شركة النسر الثاقب</h4>
+
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- الملاحظات والشروط المترجمة أسفل الختم (العربي يمين والإنجليزي يسار) -->
+                        <div class="terms-translation-container">
+                            <div class="terms-box ar-box">
+                                <strong>الملاحظات والشروط:</strong>
+                                <textarea id="terms-ar" class="editable-field" placeholder="أدخل الملاحظات هنا..."></textarea>
+                            </div>
+                            <div class="terms-box en-box">
+                                <strong>Terms & Conditions:</strong>
+                                <textarea id="terms-en" class="editable-field" readonly placeholder="Translated terms..."></textarea>
+                            </div>
+                        </div>
+
+                    </div>
+
+                </div>
+            
+                    <section class="bank-details-section">
+                        <table class="bank-table font-bold">
+                            <tr>
+                                <td class="bank-label">اسم الحساب</td>
+                                <td class="bank-value">شركة النسر الثاقب</td>
+                            </tr>
+                            <tr>
+                                <td class="bank-label">اسم البنك</td>
+                                <td class="bank-value">البنك الأهلي السعودي</td>
+                            </tr>
+                            <tr>
+                                <td class="bank-label">رقم الحساب</td>
+                                <td class="bank-value font-en">26600001172603</td>
+                            </tr>
+                            <tr>
+                                <td class="bank-label">الآيبان</td>
+                                <td class="bank-value font-en">SA5010000026600001172603</td>
+                            </tr>
+                        </table>
+                        <div class="official-stamp-box bank-stamp-box">
+                            <img src="https://i.postimg.cc/HnCsLd96/alkhtm-222.png" alt="الختم الرسمي لشركة النسر الثاقب" class="official-stamp-img">
+                        </div>
+                    </section>
+                </div>
+
+            <footer class="doc-footer-fixed">
+                <div class="footer-content">
+                    <span>العنوان : - الرياض – جدة</span>
+                    <span class="footer-sep"></span>
+                    <span>info@nisr.sa</span>
+                    <span class="footer-sep"></span>
+                    <span>0549629205 - 0510484749</span>
+                </div>
+            </footer>
+        </div>
+
+        <!-- PAGE 2 -->
+        <div class="a4-page page-2" id="page-overflow-items" style="display: none;">
+            <header class="doc-header-fixed">
+                <div class="company-brand">
+                    <h1 class="company-title">النسر الثاقب</h1>
+                    <p class="company-sub">السجل التجاري 7054465872</p>
+                    <p class="company-sub">الرقم الضريبي 314823033100003</p>
+                </div>
+                <div class="company-logo">
+                    <img src="https://i.postimg.cc/Pfm5Rvd0/logo.png" alt="شعار النسر الثاقب" class="official-logo-img">
+                </div>
+            </header>
+
+            <div class="doc-inner-body">
+                <div class="content-block">
+                    <div class="doc-title-bar">
+                        <h2 class="doc-title">عرض اسعار (تكملة البنود)</h2>
+                    </div>
+
+                    <section class="items-table-section" id="table-section-2">
+                        <table class="quote-table" id="items-table-2">
+                            <thead>
+                                <tr>
+                                    <th style="width: 47%;">البيان<br><span class="en-head">Description</span></th>
+                                    <th style="width: 8%;">الكمية<br><span class="en-head">Qty</span></th>
+                                    <th style="width: 12%;">سعر الوحدة<br><span class="en-head">Unit Price</span></th>
+                                    <th style="width: 10%;">الإجمالي<br><span class="en-head">TOTAL</span></th>
+                                    <th style="width: 10%;">الضريبة 15%<br><span class="en-head">VAT 15%</span></th>
+                                    <th style="width: 10%;">الإجمالي مع الضريبة<br><span class="en-head">Total with VAT</span></th>
+                                    <th class="no-print row-action-col" style="width: 3%;"></th>
+                                </tr>
+                            </thead>
+                            <tbody id="items-tbody-2">
+                                <!-- Dynamic Rows Page 2 -->
+                            </tbody>
+                        </table>
+                    </section>
+                </div>
+            </div>
+
+            <footer class="doc-footer-fixed">
+                <div class="footer-content">
+                    <span>العنوان : - الرياض – جدة</span>
+                    <span class="footer-sep"></span>
+                    <span>info@nisr.sa</span>
+                    <span class="footer-sep"></span>
+                    <span>0549629205 - 0510484749</span>
+                </div>
+            </footer>
+        </div>
+
+        </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- Manager login modal -->
+    <div id="manager-login-modal" class="quote-modal no-print" aria-hidden="true">
+        <div class="quote-modal-backdrop" data-close-manager-modal></div>
+        <section class="quote-modal-card manager-login-card" role="dialog" aria-modal="true" aria-labelledby="manager-login-title">
+            <div class="quote-modal-head">
+                <div>
+                    <h2 id="manager-login-title">دخول المدير</h2>
+                    <p class="quote-device-summary">الدخول مخصص لإدارة العروض المحفوظة فقط.</p>
+                </div>
+                <button type="button" class="quote-modal-close" id="btn-close-manager-login" aria-label="إغلاق">×</button>
+            </div>
+            <form id="manager-login-form" class="manager-login-form">
+                <label>البريد الإلكتروني
+                    <input id="manager-email" type="email" autocomplete="username" required>
+                </label>
+                <label>كلمة المرور
+                    <input id="manager-password" type="password" autocomplete="current-password" required>
+                </label>
+                <div id="manager-login-status" class="quote-history-status"></div>
+                <button type="submit" class="btn btn-save-quote">دخول</button>
+            </form>
+        </section>
+    </div>
+
+    <!-- Quote history modal -->
+    <div id="quote-history-modal" class="quote-modal no-print" aria-hidden="true">
+        <div class="quote-modal-backdrop" data-close-quote-modal></div>
+        <section class="quote-modal-card" role="dialog" aria-modal="true" aria-labelledby="quote-history-title">
+            <div class="quote-modal-head">
+                <div>
+                    <h2 id="quote-history-title">سجل عروض الأسعار</h2>
+                    <p id="device-summary" class="quote-device-summary"></p>
+                </div>
+                <button type="button" class="quote-modal-close" id="btn-close-history" aria-label="إغلاق">×</button>
+            </div>
+            <div class="quote-history-toolbar">
+                <input id="quote-history-search" type="search" placeholder="ابحث برقم العرض أو اسم العميل أو الجهاز...">
+                <button type="button" class="btn btn-history-refresh" id="btn-history-refresh">تحديث</button>
+            </div>
+            <div id="quote-history-status" class="quote-history-status">جاري التحميل...</div>
+            <div class="quote-history-table-wrap">
+                <table class="quote-history-table">
+                    <thead>
+                        <tr>
+                            <th>رقم العرض</th>
+                            <th>العميل</th>
+                            <th>التاريخ</th>
+                            <th>الإجمالي</th>
+                            <th>الجهاز</th>
+                            <th>وقت الحفظ</th>
+                            <th>إجراء</th>
+                        </tr>
+                    </thead>
+                    <tbody id="quote-history-tbody"></tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="script.js"></script>
+</body>
+</html>
