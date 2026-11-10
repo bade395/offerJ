@@ -1195,6 +1195,7 @@ document.addEventListener('DOMContentLoaded', () => {
             suppressDirty = true;
             quoteReadOnly = mode === 'view';
             document.body.classList.toggle('quote-read-only', quoteReadOnly);
+            document.getElementById('document-to-pdf').inert = quoteReadOnly;
             currentEditingQuoteId = data.id;
             lastSavedQuoteId = data.id;
             items = Array.isArray(data.items) && data.items.length ? JSON.parse(JSON.stringify(data.items)) : JSON.parse(JSON.stringify(defaultItems));
@@ -1216,10 +1217,12 @@ document.addEventListener('DOMContentLoaded', () => {
             alert(quoteReadOnly
                 ? `تم فتح عرض السعر ${data.quote_ref} للمعاينة فقط. لا يمكن تعديل بياناته.`
                 : `تم فتح عرض السعر ${data.quote_ref} في وضع التعديل.`);
+            return true;
         } catch (error) {
             suppressDirty = false;
             console.error('Open quote error:', error);
             alert(`تعذر فتح العرض.\n${error.message || error}`);
+            return false;
         }
     }
 
@@ -1227,8 +1230,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!isManager || !supabaseClient || !id) return;
         try {
             // Load the saved quote in preview mode and use the exact mobile PDF renderer.
-            await openSavedQuote(id, 'view');
-            if (currentEditingQuoteId !== id || !quoteReadOnly) return;
+            const loaded = await openSavedQuote(id, 'view');
+            if (!loaded || currentEditingQuoteId !== id || !quoteReadOnly) return;
             const generated = await buildPdfBlob('mobile');
             const url = URL.createObjectURL(generated.blob);
             const link = document.createElement('a');
