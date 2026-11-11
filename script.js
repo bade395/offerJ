@@ -1061,6 +1061,8 @@ document.addEventListener('DOMContentLoaded', () => {
         isManager = loggedIn;
         managerUser = user;
         if (btnHistory) btnHistory.hidden = !loggedIn;
+        if (btnOpenAgreements) btnOpenAgreements.hidden = !loggedIn;
+        if (!loggedIn) showQuotes();
         if (btnSaveQuote) btnSaveQuote.hidden = !loggedIn || !currentEditingQuoteId;
         if (btnManagerLogin) {
             btnManagerLogin.innerHTML = loggedIn
@@ -1530,6 +1532,153 @@ document.addEventListener('DOMContentLoaded', () => {
 
     window.addEventListener('beforeprint', fitLiveDocumentForPrint);
     window.addEventListener('afterprint', resetLivePrintFit);
+
+
+    // Agreements: manager-only workspace, persisted in Supabase with RLS.
+    const agreementWorkspace = document.getElementById('agreement-workspace');
+    const btnOpenAgreements = document.getElementById('btn-open-agreements');
+    const agreementForm = document.getElementById('agreement-form');
+    const agreementList = document.getElementById('agreement-list');
+    const agreementStatus = document.getElementById('agreement-list-status');
+    const agreementSheet = document.getElementById('agreement-print-sheet');
+    const agreementFields = ['number','date','title','first-name','first-id','first-address','first-phone','second-name','second-id','second-address','second-phone','kind','amount','percent','basis','description','payment','first-due','schedule','bank','extra','city','copies','witness1','witness1-id','witness2','witness2-id'];
+    let currentAgreementId = null;
+    let agreementRows = [];
+    const ag = key => document.getElementById('ag-' + key);
+    const agEsc = value => String(value ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+    function agreementDataFromForm() {
+      const data = {};
+      agreementFields.forEach(key => data[key] = ag(key)?.value?.trim() || '');
+      return data;
+    }
+    function fillAgreementForm(data = {}) {
+      agreementFields.forEach(key => { if (ag(key)) ag(key).value = data[key] || ''; });
+      document.getElementById('agreement-id').value = currentAgreementId || '';
+      renderAgreementSheet(data);
+    }
+    function newAgreement() {
+      if (!isManager) return;
+      currentAgreementId = null;
+      agreementForm.reset();
+      document.getElementById('agreement-id').value = '';
+      ag('date').value = new Date().toISOString().slice(0,10);
+      ag('number').value = 'AGR-' + new Date().toISOString().slice(0,10).replace(/-/g,'') + '-' + Math.floor(100 + Math.random()*900);
+      ag('title').value = 'اتفاقية إقرار والتزام مالي';
+      ag('city').value = 'الرياض';
+      ag('copies').value = 'نسختان أصليتان';
+      renderAgreementSheet(agreementDataFromForm());
+    }
+    function agreementClauseText(data) {
+      const amount = data.kind === 'percentage'
+        ? 'نسبة قدرها ' + (data.percent || '........') + '% من ' + (data.basis || 'الأساس المحدد بين الطرفين')
+        : 'مبلغ وقدره ' + (data.amount || '........') + ' ريال سعودي';
+      const clauses = [
+        'أولاً: التمهيد جزء لا يتجزأ من هذه الاتفاقية ومكمّل ومفسّر لأحكامها.',
+        'ثانياً: يقر الطرف الثاني إقراراً صريحاً بأنه ملتزم لصالح الطرف الأول بـ' + amount + '، وذلك عن السبب الموضح في هذه الاتفاقية، ويقر بصحة البيانات والمعلومات والمستندات التي قدمها.',
+        'ثالثاً: يلتزم الطرف الثاني بالسداد وفق طريقة وجدول السداد المحددين أعلاه، وتعد المبالغ مستحقة في مواعيدها دون حاجة إلى مطالبة متى كان تاريخ الاستحقاق محدداً.',
+        'رابعاً: لا يعد أي سداد مبرئاً للذمة إلا بمقدار ما يثبت سداده بموجب تحويل بنكي أو سند قبض أو مستند كتابي معتمد من الطرف الأول.',
+        'خامساً: عند التأخر أو الإخلال، يحق للطرف المتضرر المطالبة بتنفيذ الالتزامات والحقوق والتعويضات التي تجيزها الأنظمة، بعد اتباع الإجراءات النظامية، دون اعتبار أي إجراء غير منصوص عليه نظاماً نتيجة تلقائية لهذه الاتفاقية.',
+        'سادساً: لا يكون أي تعديل أو تنازل أو تمديد نافذاً إلا بموجب اتفاق كتابي موقع من الطرفين.',
+        'سابعاً: تكون الإخطارات على العناوين ووسائل التواصل المدونة في هذه الاتفاقية، ويلتزم كل طرف بإشعار الآخر كتابةً بأي تغيير يطرأ عليها.',
+        'ثامناً: تخضع هذه الاتفاقية للأنظمة المعمول بها في المملكة العربية السعودية، ويكون الاختصاص للجهة القضائية المختصة مكانياً ونوعياً في مدينة ' + (data.city || '........') + '، ما لم تقضِ قواعد الاختصاص بخلاف ذلك.',
+        'تاسعاً: حررت هذه الاتفاقية من ' + (data.copies || 'نسختين') + '، تسلم كل طرف نسخة للعمل بموجبها، بعد قراءتها وفهمها والموافقة على جميع بنودها.'
+      ];
+      if (data.extra) clauses.push('شروط إضافية: ' + data.extra);
+      return clauses;
+    }
+    function renderAgreementSheet(data) {
+      if (!agreementSheet) return;
+      const date = data.date ? new Date(data.date + 'T00:00:00').toLocaleDateString('ar-SA') : '................';
+      const party = (name,id,address,phone) => '<div class="agreement-party"><b>' + agEsc(name || '........................') + '</b><div>رقم الهوية / السجل: ' + agEsc(id || '................') + '</div><div>العنوان: ' + agEsc(address || '................') + '</div><div>الجوال: ' + agEsc(phone || '................') + '</div></div>';
+      const clauses = agreementClauseText(data).map((line,i) => '<p><b>' + (i+1) + '.</b> ' + agEsc(line) + '</p>').join('');
+      const amount = data.kind === 'percentage' ? (data.percent || '....') + '% من ' + (data.basis || '................') : (data.amount || '................') + ' ريال سعودي';
+      agreementSheet.innerHTML = `
+        <header class="agreement-doc-head"><div><h1>النسر الثاقب</h1><p>السجل التجاري 7054465872</p><p>الرقم الضريبي 314823033100003</p></div><img src="https://i.postimg.cc/Pfm5Rvd0/logo.png" alt="شعار النسر الثاقب"></header>
+        <div class="agreement-doc-title"><h2>${agEsc(data.title || 'اتفاقية إقرار والتزام مالي')}</h2><div>رقم الاتفاقية: <b>${agEsc(data.number || '................')}</b>　|　التاريخ: <b>${agEsc(date)}</b></div></div>
+        <p class="agreement-preamble">تم بعون الله في يوم تحرير هذه الاتفاقية، الاتفاق والتراضي بين كل من:</p>
+        <div class="agreement-parties"><div><b>الطرف الأول (الدائن / صاحب الحق)</b>${party(data['first-name'],data['first-id'],data['first-address'],data['first-phone'])}</div><div><b>الطرف الثاني (المدين / الملتزم)</b>${party(data['second-name'],data['second-id'],data['second-address'],data['second-phone'])}</div></div>
+        <p>ويشار إليهما مجتمعين بـ«الطرفين»، وقد أقر كل طرف بأهليته المعتبرة شرعاً ونظاماً للتعاقد والتصرف، واتفقا على ما يلي:</p>
+        <h3>موضوع الالتزام</h3><p>${agEsc(data.description || '................................................................................................')}</p>
+        <p><b>قيمة الالتزام:</b> ${agEsc(amount)}</p>
+        <p><b>طريقة السداد:</b> ${agEsc(data.payment || '................')}　 <b>أول استحقاق:</b> ${agEsc(data['first-due'] || '................')}</p>
+        <p><b>جدول السداد:</b><br>${agEsc(data.schedule || 'وفق ما يتفق عليه الطرفان كتابةً.').replace(/\n/g,'<br>')}</p>
+        <p><b>بيانات الحساب البنكي:</b><br>${agEsc(data.bank || '........................................................')}</p>
+        <h3>الشروط والأحكام</h3>${clauses}
+        <div class="agreement-signatures"><div><h3>الطرف الأول</h3><p>الاسم: ${agEsc(data['first-name'] || '................')}</p><p>التوقيع: ........................</p><p>التاريخ: ........................</p></div><div><h3>الطرف الثاني</h3><p>الاسم: ${agEsc(data['second-name'] || '................')}</p><p>التوقيع: ........................</p><p>التاريخ: ........................</p></div></div>
+        <div class="agreement-witnesses"><div><b>الشاهد الأول:</b> ${agEsc(data.witness1 || '................')}　 الهوية: ${agEsc(data['witness1-id'] || '................')}　 التوقيع: ................</div><div><b>الشاهد الثاني:</b> ${agEsc(data.witness2 || '................')}　 الهوية: ${agEsc(data['witness2-id'] || '................')}　 التوقيع: ................</div></div>
+        <footer class="agreement-doc-footer">الرياض – جدة　 |　 info@nisr.sa　 |　 0501767213 - 0510484749</footer>`;
+    }
+    async function loadAgreements() {
+      if (!isManager || !supabaseClient) return;
+      agreementStatus.textContent = 'جاري تحميل الاتفاقيات...';
+      const {data,error} = await supabaseClient.from('commitment_agreements').select('*').order('created_at',{ascending:false}).limit(200);
+      if (error) { agreementStatus.textContent = 'تعذر تحميل الاتفاقيات: ' + error.message; return; }
+      agreementRows = data || [];
+      agreementStatus.textContent = agreementRows.length ? 'عدد الاتفاقيات: ' + agreementRows.length : 'لا توجد اتفاقيات محفوظة بعد.';
+      renderAgreementList();
+    }
+    function renderAgreementList() {
+      const term = (document.getElementById('agreement-search')?.value || '').trim().toLowerCase();
+      const rows = agreementRows.filter(row => [row.agreement_number,row.data?.['first-name'],row.data?.['second-name']].join(' ').toLowerCase().includes(term));
+      agreementList.innerHTML = rows.map(row => '<div class="agreement-list-item"><div><b>' + agEsc(row.agreement_number) + '</b><small>' + agEsc(row.data?.['second-name'] || row.title) + '</small></div><div class="agreement-list-actions"><button type="button" data-ag-edit="' + row.id + '">فتح</button><button type="button" data-ag-delete="' + row.id + '">حذف</button></div></div>').join('') || '<p class="agreement-empty">لا توجد نتائج.</p>';
+    }
+    async function saveAgreement() {
+      if (!isManager || !supabaseClient) return;
+      const data = agreementDataFromForm();
+      if (!data.number || !data.date || !data['first-name'] || !data['second-name']) { alert('يرجى إدخال رقم الاتفاقية والتاريخ واسم الطرفين على الأقل.'); return; }
+      const payload = {agreement_number:data.number,agreement_date:data.date,title:data.title || 'اتفاقية إقرار والتزام مالي',data,updated_at:new Date().toISOString()};
+      let result;
+      if (currentAgreementId) result = await supabaseClient.from('commitment_agreements').update(payload).eq('id',currentAgreementId).select().single();
+      else result = await supabaseClient.from('commitment_agreements').insert({...payload,created_by:managerUser.id}).select().single();
+      if (result.error) { alert('تعذر حفظ الاتفاقية: ' + result.error.message); return; }
+      currentAgreementId = result.data.id;
+      document.getElementById('agreement-id').value = currentAgreementId;
+      renderAgreementSheet(data);
+      await loadAgreements();
+      alert('تم حفظ الاتفاقية بنجاح.');
+    }
+    async function openAgreement(id) {
+      if (!isManager) return;
+      const row = agreementRows.find(item => item.id === id);
+      if (!row) return;
+      currentAgreementId = row.id;
+      fillAgreementForm(row.data || {});
+      agreementStatus.textContent = 'تم فتح الاتفاقية ' + row.agreement_number;
+    }
+    async function deleteAgreement(id) {
+      if (!isManager || !confirm('هل تريد حذف هذه الاتفاقية نهائياً؟')) return;
+      const {error} = await supabaseClient.from('commitment_agreements').delete().eq('id',id);
+      if (error) { alert('تعذر حذف الاتفاقية: ' + error.message); return; }
+      if (currentAgreementId === id) newAgreement();
+      await loadAgreements();
+    }
+    function showAgreements() {
+      if (!isManager) return;
+      document.body.classList.add('agreement-mode');
+      agreementWorkspace.hidden = false;
+      document.getElementById('document-to-pdf').hidden = true;
+      document.querySelector('.admin-control-bar').classList.add('agreement-header-mode');
+      newAgreement();
+      loadAgreements();
+      window.scrollTo({top:0,behavior:'smooth'});
+    }
+    function showQuotes() {
+      document.body.classList.remove('agreement-mode');
+      agreementWorkspace.hidden = true;
+      document.getElementById('document-to-pdf').hidden = false;
+      document.querySelector('.admin-control-bar').classList.remove('agreement-header-mode');
+    }
+    if (btnOpenAgreements) btnOpenAgreements.addEventListener('click',showAgreements);
+    document.getElementById('btn-agreement-home')?.addEventListener('click',showQuotes);
+    document.getElementById('btn-agreement-new')?.addEventListener('click',newAgreement);
+    document.getElementById('btn-agreement-save')?.addEventListener('click',saveAgreement);
+    document.getElementById('btn-agreement-print')?.addEventListener('click',()=>{ if (!isManager) return; renderAgreementSheet(agreementDataFromForm()); window.print(); });
+    document.getElementById('agreement-search')?.addEventListener('input',renderAgreementList);
+    agreementList?.addEventListener('click',event=>{
+      const edit=event.target.closest('[data-ag-edit]'); if(edit) openAgreement(edit.dataset.agEdit);
+      const del=event.target.closest('[data-ag-delete]'); if(del) deleteAgreement(del.dataset.agDelete);
+    });
+    agreementForm?.addEventListener('input',()=>renderAgreementSheet(agreementDataFromForm()));
 
     generateAutoMeta();
     renderItems();
