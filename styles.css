@@ -1801,3 +1801,29 @@ body.agreement-mode .agreement-editor { min-width: 0; }
 .agreement-print-content .agreement-clause { margin:6px 0; text-align:justify; }
 @media(max-width:650px) { .agreement-print-sheet { padding:35mm 7mm 22mm; background-size:100% 297mm; } .agreement-print-sheet .doc-header-fixed { left:7mm; right:7mm; } }
 @media print { .agreement-print-sheet { display:none !important; } }
+
+
+/* Screen entry mode: edit the actual A4 agreement, not the data-entry form. */
+body.agreement-mode .agreement-input-page { display:none !important; }
+body.agreement-mode .agreement-editor { display:flex; flex-direction:column; align-items:center; gap:0; padding:0; background:transparent; border:0; box-shadow:none; }
+body.agreement-mode #agreement-print-sheet.agreement-print-sheet { display:block !important; visibility:visible !important; position:relative; box-sizing:border-box; width:min(210mm,100%); max-width:100%; min-height:297mm; height:auto; margin:0 auto 28px; padding:39mm 16mm 25mm; overflow:visible; background-image:url('https://i.postimg.cc/Bbs40NJc/alkhlfyt.jpg') !important; background-position:top center !important; background-size:100% 297mm !important; background-repeat:repeat-y !important; box-shadow:0 8px 28px rgba(15,23,42,.18); color:#1f2937; font-family:'Tajawal',Arial,sans-serif; font-size:12px; line-height:1.75; }
+body.agreement-mode #agreement-print-sheet .doc-header-fixed { position:absolute; top:5mm; left:14mm; right:14mm; }
+body.agreement-mode #agreement-print-sheet .doc-footer-fixed { position:relative; inset:auto; margin:22px 0 0; }
+body.agreement-mode #agreement-print-sheet[contenteditable="true"] { outline:0; }
+body.agreement-mode #agreement-print-sheet[contenteditable="true"]:focus { outline:1px dashed rgba(178,138,32,.55); outline-offset:4px; }
+body.agreement-mode #agreement-print-sheet .agreement-print-content { min-height:190mm; outline:0; }
+body.agreement-mode #agreement-print-sheet .agreement-print-content:focus { outline:0; }
+body.agreement-mode #agreement-print-sheet h1,
+body.agreement-mode #agreement-print-sheet h2,
+body.agreement-mode #agreement-print-sheet h3,
+body.agreement-mode #agreement-print-sheet p,
+body.agreement-mode #agreement-print-sheet b,
+body.agreement-mode #agreement-print-sheet span,
+body.agreement-mode #agreement-print-sheet section,
+body.agreement-mode #agreement-print-sheet div { cursor:text; }
+body.agreement-mode #agreement-print-sheet img { cursor:default; }
+body.agreement-mode #agreement-print-sheet .agreement-parties { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+body.agreement-mode #agreement-print-sheet .agreement-signatures { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:22px; }
+@media(max-width:1000px) { body.agreement-mode .agreement-editor { width:100%; } body.agreement-mode #agreement-print-sheet.agreement-print-sheet { width:100%; } }
+@media(max-width:650px) { body.agreement-mode #agreement-print-sheet.agreement-print-sheet { padding:35mm 7mm 22mm; background-size:100% 297mm !important; } body.agreement-mode #agreement-print-sheet .doc-header-fixed { left:7mm; right:7mm; } body.agreement-mode #agreement-print-sheet .agreement-parties,body.agreement-mode #agreement-print-sheet .agreement-signatures { grid-template-columns:1fr; } }
+@media print { body.agreement-mode .agreement-input-page { display:none !important; } body.agreement-mode #agreement-print-sheet.agreement-print-sheet { display:none !important; } }
