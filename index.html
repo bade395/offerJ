@@ -286,45 +286,59 @@
           <div id="agreement-list" class="agreement-list"></div>
         </aside>
         <div class="agreement-editor">
-          <form id="agreement-form" autocomplete="off">
-            <input type="hidden" id="agreement-id">
-            <div class="agreement-form-heading">بيانات الاتفاقية</div>
-            <div class="agreement-fields">
-              <label>رقم الاتفاقية<input id="ag-number" required></label>
-              <label>تاريخ الاتفاقية<input id="ag-date" type="date" required></label>
-              <label class="wide">عنوان الاتفاقية<input id="ag-title" value="اتفاقية إقرار والتزام مالي" required></label>
-              <div class="agreement-form-heading wide">الطرف الأول (الدائن / صاحب الحق)</div>
-              <label>الاسم / اسم المنشأة<input id="ag-first-name" required></label>
-              <label>رقم الهوية / السجل التجاري<input id="ag-first-id"></label>
-              <label>العنوان الوطني<input id="ag-first-address"></label>
-              <label>رقم الجوال<input id="ag-first-phone"></label>
-              <div class="agreement-form-heading wide">الطرف الثاني (المدين / الملتزم)</div>
-              <label>الاسم / اسم المنشأة<input id="ag-second-name" required></label>
-              <label>رقم الهوية / السجل التجاري<input id="ag-second-id"></label>
-              <label>العنوان الوطني<input id="ag-second-address"></label>
-              <label>رقم الجوال<input id="ag-second-phone"></label>
-              <div class="agreement-form-heading wide">موضوع الالتزام المالي</div>
-              <label>نوع الالتزام<select id="ag-kind"><option value="fixed">مبلغ ثابت</option><option value="percentage">نسبة مئوية</option></select></label>
-              <label>قيمة الالتزام<input id="ag-amount" inputmode="decimal" placeholder="مثال: 25000"></label>
-              <label>النسبة المئوية (%)<input id="ag-percent" inputmode="decimal" placeholder="تُستخدم عند اختيار النسبة"></label>
-              <label>أساس احتساب النسبة<input id="ag-basis" placeholder="مثال: صافي قيمة العقد رقم..."></label>
-              <label class="wide">سبب / وصف الالتزام<textarea id="ag-description" rows="3" placeholder="تفاصيل سبب نشوء الالتزام والمستندات المرتبطة به"></textarea></label>
-              <div class="agreement-form-heading wide">السداد والإخلال</div>
-              <label>طريقة السداد<select id="ag-payment"><option>تحويل بنكي</option><option>نقداً بموجب سند قبض</option><option>دفعات / أقساط</option><option>أخرى</option></select></label>
-              <label>تاريخ استحقاق أول دفعة<input id="ag-first-due" type="date"></label>
-              <label class="wide">جدول السداد / الأقساط<textarea id="ag-schedule" rows="3" placeholder="مثال: 5,000 ريال بتاريخ ... ثم ..."></textarea></label>
-              <label class="wide">بيانات الحساب البنكي<textarea id="ag-bank" rows="2" placeholder="اسم البنك، اسم المستفيد، رقم الآيبان"></textarea></label>
-              <label class="wide">شروط إضافية متفق عليها<textarea id="ag-extra" rows="3"></textarea></label>
-              <label>مدينة الاختصاص القضائي<input id="ag-city" value="الرياض"></label>
-              <label>عدد النسخ الأصلية<input id="ag-copies" value="نسختان أصليتان"></label>
-              <div class="agreement-form-heading wide">الشهود والتوقيعات</div>
-              <label>الشاهد الأول<input id="ag-witness1"></label>
-              <label>هوية الشاهد الأول<input id="ag-witness1-id"></label>
-              <label>الشاهد الثاني<input id="ag-witness2"></label>
-              <label>هوية الشاهد الثاني<input id="ag-witness2-id"></label>
-            </div>
-            <p class="agreement-legal-note">تنبيه: هذه صيغة تعاقدية قابلة للمراجعة وليست استشارة قانونية. لا يصبح العقد العادي سنداً تنفيذياً تلقائياً؛ وتحدد صفته التنفيذية وفق الأنظمة وشروط التوثيق المعمول بها في المملكة.</p>
-          </form>
+          <div class="agreement-input-page a4-page">
+            <header class="doc-header-fixed">
+              <div class="company-brand">
+                <h1 class="company-title">النسر الثاقب</h1>
+                <p class="company-sub">السجل التجاري 7054465872</p>
+                <p class="company-sub">الرقم الضريبي 314823033100003</p>
+              </div>
+              <div class="company-logo"><img src="https://i.postimg.cc/Pfm5Rvd0/logo.png" alt="شعار النسر الثاقب" class="official-logo-img"></div>
+            </header>
+            <form id="agreement-form" class="agreement-inline-form" autocomplete="off">
+              <input type="hidden" id="agreement-id">
+              <div class="doc-title-bar"><h2 class="doc-title">اتفاقية إقرار والتزام مالي</h2></div>
+              <div class="agreement-fields">
+                <div class="agreement-form-heading wide">بيانات الاتفاقية</div>
+                <label>رقم الاتفاقية<input id="ag-number" class="editable-field" required></label>
+                <label>تاريخ الاتفاقية<input id="ag-date" class="editable-field" type="date" required></label>
+                <label class="wide">عنوان الاتفاقية<input id="ag-title" class="editable-field" value="اتفاقية إقرار والتزام مالي" required></label>
+                <div class="agreement-form-heading wide">أولاً: بيانات الطرف الأول (صاحب الحق)</div>
+                <label>الاسم / اسم المنشأة<input id="ag-first-name" class="editable-field" required></label>
+                <label>رقم الهوية / السجل التجاري<input id="ag-first-id" class="editable-field"></label>
+                <label>العنوان الوطني<input id="ag-first-address" class="editable-field"></label>
+                <label>رقم الجوال والبريد الإلكتروني<input id="ag-first-phone" class="editable-field"></label>
+                <div class="agreement-form-heading wide">ثانياً: بيانات الطرف الثاني (الملتزم)</div>
+                <label>الاسم / اسم المنشأة<input id="ag-second-name" class="editable-field" required></label>
+                <label>رقم الهوية / السجل التجاري<input id="ag-second-id" class="editable-field"></label>
+                <label>العنوان الوطني<input id="ag-second-address" class="editable-field"></label>
+                <label>رقم الجوال والبريد الإلكتروني<input id="ag-second-phone" class="editable-field"></label>
+                <div class="agreement-form-heading wide">ثالثاً: موضوع الالتزام ومصدره</div>
+                <label>نوع الالتزام<select id="ag-kind" class="editable-field"><option value="fixed">مبلغ ثابت</option><option value="percentage">نسبة مئوية</option></select></label>
+                <label>قيمة الالتزام بالريال<input id="ag-amount" class="editable-field" inputmode="decimal" placeholder="مثال: 25000"></label>
+                <label>النسبة المئوية (%)<input id="ag-percent" class="editable-field" inputmode="decimal" placeholder="تستخدم عند اختيار النسبة"></label>
+                <label>أساس احتساب النسبة<input id="ag-basis" class="editable-field" placeholder="حدد الوعاء وطريقة الحساب والاستبعادات"></label>
+                <label class="wide">سبب نشوء الالتزام ووصفه التفصيلي<input id="ag-description" class="editable-field" placeholder="العقد أو الفاتورة أو الخدمة أو الواقعة المنشئة للالتزام"></label>
+                <label class="wide">المستندات المؤيدة وأرقامها وتواريخها<input id="ag-evidence" class="editable-field" placeholder="أرقام العقود والفواتير ومحاضر الاستلام والمرفقات"></label>
+                <div class="agreement-form-heading wide">رابعاً: آلية السداد والاستحقاق</div>
+                <label>طريقة السداد<select id="ag-payment" class="editable-field"><option>تحويل بنكي</option><option>نقداً بموجب سند قبض</option><option>دفعات / أقساط</option><option>أخرى</option></select></label>
+                <label>تاريخ أول استحقاق<input id="ag-first-due" class="editable-field" type="date"></label>
+                <label class="wide">جدول السداد ومواعيد وقيمة كل دفعة<input id="ag-schedule" class="editable-field" placeholder="حدد قيمة كل قسط وتاريخ استحقاقه بدقة"></label>
+                <label class="wide">بيانات الحساب البنكي واسم المستفيد والآيبان<input id="ag-bank" class="editable-field"></label>
+                <div class="agreement-form-heading wide">خامساً: أحكام إضافية</div>
+                <label class="wide">شروط خاصة متفق عليها<input id="ag-extra" class="editable-field"></label>
+                <label>مدينة تحرير الاتفاقية<input id="ag-city" class="editable-field" value="الرياض"></label>
+                <label>عدد النسخ الأصلية<input id="ag-copies" class="editable-field" value="نسختان أصليتان"></label>
+                <div class="agreement-form-heading wide">سادساً: الشهود</div>
+                <label>اسم الشاهد الأول<input id="ag-witness1" class="editable-field"></label>
+                <label>هوية الشاهد الأول<input id="ag-witness1-id" class="editable-field"></label>
+                <label>اسم الشاهد الثاني<input id="ag-witness2" class="editable-field"></label>
+                <label>هوية الشاهد الثاني<input id="ag-witness2-id" class="editable-field"></label>
+              </div>
+              <p class="agreement-legal-note">يرجى مراجعة البيانات والمستندات قبل التوقيع. هذه صيغة تعاقدية عامة وليست استشارة قانونية؛ ولا يكتسب العقد صفة السند التنفيذي لمجرد توقيعه، بل وفق متطلبات النظام والتوثيق المعتمد.</p>
+            </form>
+            <footer class="doc-footer-fixed"><div class="footer-content"><span>العنوان : - الرياض – جدة</span><span class="footer-sep"></span><span>info@nisr.sa</span><span class="footer-sep"></span><span>0501767213 - 0510484749</span></div></footer>
+          </div>
           <article id="agreement-print-sheet" class="agreement-print-sheet" dir="rtl"></article>
         </div>
       </div>
