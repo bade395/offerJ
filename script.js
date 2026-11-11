@@ -1007,6 +1007,139 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    async function buildAgreementPdfBlob() {
+        if (!agreementSheet || typeof html2canvas !== 'function') throw new Error('مكتبة إنشاء PDF غير متاحة');
+        const jsPDFCtor = window.jspdf?.jsPDF || window.jsPDF;
+        if (typeof jsPDFCtor !== 'function') throw new Error('مكتبة jsPDF غير متاحة');
+
+        const PAGE_W = 794;
+        const PAGE_H = 1123;
+        const TOP = Math.round(40 * PAGE_H / 297);
+        const BOTTOM = Math.round(25 * PAGE_H / 297);
+        const SIDE = Math.round(14 * PAGE_W / 210);
+        const CONTENT_H = PAGE_H - TOP - BOTTOM;
+        const scale = Math.min(2, Math.max(1.5, window.devicePixelRatio || 1));
+
+        if (document.fonts) {
+            await Promise.all([
+                document.fonts.load('500 12px Tajawal', 'اتفاقية إقرار والتزام مالي'),
+                document.fonts.load('800 24px Tajawal', 'النسر الثاقب'),
+                document.fonts.ready
+            ]);
+        }
+
+        const stage = document.createElement('div');
+        stage.id = 'agreement-pdf-export-stage';
+        stage.style.cssText = 'position:fixed;left:-100000px;top:0;width:'+PAGE_W+'px;margin:0;padding:0;z-index:-1;pointer-events:none;';
+        const style = document.createElement('style');
+        style.textContent = `
+          #agreement-pdf-export-stage, #agreement-pdf-export-stage * { box-sizing:border-box !important; }
+          #agreement-pdf-export-stage .agreement-pdf-page { position:relative !important; width:${PAGE_W}px !important; height:${PAGE_H}px !important; min-height:${PAGE_H}px !important; max-height:${PAGE_H}px !important; overflow:hidden !important; margin:0 !important; padding:0 !important; background:#fff url('https://i.postimg.cc/Bbs40NJc/alkhlfyt.jpg') center center / 100% 100% no-repeat !important; }
+          #agreement-pdf-export-stage .agreement-pdf-header { position:absolute !important; top:19px !important; left:${SIDE}px !important; right:${SIDE}px !important; height:98px !important; overflow:hidden !important; }
+          #agreement-pdf-export-stage .agreement-pdf-footer { position:absolute !important; left:${SIDE}px !important; right:${SIDE}px !important; bottom:18px !important; margin:0 !important; }
+          #agreement-pdf-export-stage .agreement-pdf-content { position:absolute !important; top:${TOP}px !important; left:${SIDE}px !important; right:${SIDE}px !important; width:auto !important; height:${CONTENT_H}px !important; max-height:${CONTENT_H}px !important; overflow:hidden !important; margin:0 !important; padding:0 !important; font-family:Tajawal,Arial,sans-serif !important; font-size:11.5pt !important; line-height:1.65 !important; color:#1f2937 !important; }
+          #agreement-pdf-export-stage .agreement-pdf-content > * { max-width:100% !important; }
+          #agreement-pdf-export-stage .agreement-clause { break-inside:auto !important; page-break-inside:auto !important; }
+        `;
+        stage.appendChild(style);
+        document.body.appendChild(stage);
+
+        const makePage = () => {
+            const page = document.createElement('div');
+            page.className = 'agreement-pdf-page';
+            const header = agreementSheet.querySelector('.doc-header-fixed')?.cloneNode(true);
+            const footer = agreementSheet.querySelector('.doc-footer-fixed')?.cloneNode(true);
+            const content = document.createElement('div');
+            content.className = 'agreement-pdf-content';
+            if (header) { header.className += ' agreement-pdf-header'; page.appendChild(header); }
+            page.appendChild(content);
+            if (footer) { footer.className += ' agreement-pdf-footer'; page.appendChild(footer); }
+            stage.appendChild(page);
+            return { page, content };
+        };
+
+        const waitImages = async root => {
+            await Promise.all(Array.from(root.querySelectorAll('img')).map(img => {
+                if (img.complete && img.naturalWidth) return Promise.resolve();
+                return new Promise(resolve => {
+                    const done = () => resolve();
+                    img.addEventListener('load', done, {once:true});
+                    img.addEventListener('error', done, {once:true});
+                    setTimeout(done, 5000);
+                });
+            }));
+        };
+
+        try {
+            const sourceContent = agreementSheet.querySelector('.agreement-print-content');
+            if (!sourceContent) throw new Error('محتوى الاتفاقية غير موجود');
+            const sourceNodes = Array.from(sourceContent.children);
+            if (!sourceNodes.length) throw new Error('لا توجد بنود لتصديرها');
+
+            let current = makePage();
+            for (const sourceNode of sourceNodes) {
+                const node = sourceNode.cloneNode(true);
+                current.content.appendChild(node);
+                await new Promise(resolve => requestAnimationFrame(resolve));
+                if (current.content.scrollHeight > CONTENT_H + 1 && current.content.children.length > 1) {
+                    current.content.removeChild(node);
+                    current = makePage();
+                    current.content.appendChild(node);
+                    await new Promise(resolve => requestAnimationFrame(resolve));
+                }
+                if (current.content.scrollHeight > CONTENT_H + 1) {
+                    node.style.setProperty('font-size','10.5pt','important');
+                    node.style.setProperty('line-height','1.45','important');
+                }
+            }
+
+            const pages = Array.from(stage.querySelectorAll('.agreement-pdf-page'));
+            const pdf = new jsPDFCtor({orientation:'portrait',unit:'mm',format:'a4',compress:true,putOnlyUsedFonts:true});
+            for (let i=0; i<pages.length; i++) {
+                await waitImages(pages[i]);
+                await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+                const canvas = await html2canvas(pages[i], {
+                    scale, width:PAGE_W, height:PAGE_H, windowWidth:PAGE_W, windowHeight:PAGE_H,
+                    x:0, y:0, scrollX:0, scrollY:0, useCORS:true, allowTaint:false,
+                    backgroundColor:'#ffffff', imageTimeout:15000, logging:false, removeContainer:true
+                });
+                if (i) pdf.addPage('a4','portrait');
+                pdf.addImage(canvas.toDataURL('image/png'),'PNG',0,0,210,297,undefined,'FAST');
+            }
+            const number = ag('number')?.value || 'Agreement';
+            return {blob:pdf.output('blob'), filename:'اتفاقية_التزام_'+String(number).replace(/[^\\u0600-\\u06FF\\w-]+/g,'_')+'.pdf'};
+        } finally {
+            stage.remove();
+        }
+    }
+
+    async function exportAgreementPdf(button) {
+        if (!isManager || !button) return;
+        const oldLabel = button.innerHTML;
+        button.disabled = true;
+        button.innerText = 'جاري تجهيز PDF للجوال...';
+        document.body.classList.add('rendering-pdf');
+        try {
+            renderAgreementSheet(agreementDataFromForm());
+            const generated = await buildAgreementPdfBlob();
+            const url = URL.createObjectURL(generated.blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = generated.filename;
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            setTimeout(() => URL.revokeObjectURL(url), 30000);
+        } catch (error) {
+            console.error('Agreement PDF export error:', error);
+            alert('تعذر إنشاء PDF للاتفاقية.\\n' + (error.message || error));
+        } finally {
+            document.body.classList.remove('rendering-pdf');
+            button.disabled = false;
+            button.innerHTML = oldLabel;
+        }
+    }
+
     async function savePdfForQuote(quoteId, mode = 'desktop') {
         if (!quoteId) return false;
         const generated = await buildPdfBlob(mode);
@@ -1689,14 +1822,9 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btn-agreement-home')?.addEventListener('click',showQuotes);
     document.getElementById('btn-agreement-new')?.addEventListener('click',newAgreement);
     document.getElementById('btn-agreement-save')?.addEventListener('click',saveAgreement);
-    document.getElementById('btn-agreement-print')?.addEventListener('click',()=>{
-      if (!isManager) return;
-      renderAgreementSheet(agreementDataFromForm());
-      document.body.classList.add('agreement-printing');
-      // Wait one frame so print layout is recalculated with the quote document excluded.
-      requestAnimationFrame(() => window.print());
+    document.getElementById('btn-agreement-print')?.addEventListener('click',event=>{
+      exportAgreementPdf(event.currentTarget);
     });
-    window.addEventListener('afterprint',()=>document.body.classList.remove('agreement-printing'));
     document.getElementById('agreement-search')?.addEventListener('input',renderAgreementList);
     agreementList?.addEventListener('click',event=>{
       const edit=event.target.closest('[data-ag-edit]'); if(edit) openAgreement(edit.dataset.agEdit);
