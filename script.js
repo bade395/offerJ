@@ -1272,7 +1272,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     if (btnSaveQuote) btnSaveQuote.addEventListener('click', updateManagerQuote);
-    if (btnHistory) btnHistory.addEventListener('click', openHistoryModal);
+    if (btnHistory) btnHistory.addEventListener('click', () => { if (document.body.classList.contains('agreement-mode')) showQuotes(); else openHistoryModal(); });
     if (btnManagerLogin) btnManagerLogin.addEventListener('click', handleManagerButton);
     if (managerLoginForm) managerLoginForm.addEventListener('submit', handleManagerLogin);
     if (btnCloseManagerLogin) btnCloseManagerLogin.addEventListener('click', closeManagerLoginModal);
@@ -1541,7 +1541,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const agreementList = document.getElementById('agreement-list');
     const agreementStatus = document.getElementById('agreement-list-status');
     const agreementSheet = document.getElementById('agreement-print-sheet');
-    const agreementFields = ['number','date','title','first-name','first-id','first-address','first-phone','second-name','second-id','second-address','second-phone','kind','amount','percent','basis','description','payment','first-due','schedule','bank','extra','city','copies','witness1','witness1-id','witness2','witness2-id'];
+    const agreementFields = ['number','date','title','first-name','first-id','first-address','first-phone','second-name','second-id','second-address','second-phone','kind','amount','percent','basis','description','evidence','payment','first-due','schedule','bank','extra','city','copies','witness1','witness1-id','witness2','witness2-id'];
     let currentAgreementId = null;
     let agreementRows = [];
     const ag = key => document.getElementById('ag-' + key);
@@ -1569,44 +1569,56 @@ document.addEventListener('DOMContentLoaded', () => {
       renderAgreementSheet(agreementDataFromForm());
     }
     function agreementClauseText(data) {
-      const amount = data.kind === 'percentage'
-        ? 'نسبة قدرها ' + (data.percent || '........') + '% من ' + (data.basis || 'الأساس المحدد بين الطرفين')
-        : 'مبلغ وقدره ' + (data.amount || '........') + ' ريال سعودي';
+      const isPercent = data.kind === 'percentage';
+      const value = isPercent
+        ? 'نسبة ' + (data.percent || '........') + '% من ' + (data.basis || 'وعاء احتساب يحدد كتابةً')
+        : 'مبلغ إجمالي قدره ' + (data.amount || '........') + ' ريال سعودي';
       const clauses = [
-        'أولاً: التمهيد جزء لا يتجزأ من هذه الاتفاقية ومكمّل ومفسّر لأحكامها.',
-        'ثانياً: يقر الطرف الثاني إقراراً صريحاً بأنه ملتزم لصالح الطرف الأول بـ' + amount + '، وذلك عن السبب الموضح في هذه الاتفاقية، ويقر بصحة البيانات والمعلومات والمستندات التي قدمها.',
-        'ثالثاً: يلتزم الطرف الثاني بالسداد وفق طريقة وجدول السداد المحددين أعلاه، وتعد المبالغ مستحقة في مواعيدها دون حاجة إلى مطالبة متى كان تاريخ الاستحقاق محدداً.',
-        'رابعاً: لا يعد أي سداد مبرئاً للذمة إلا بمقدار ما يثبت سداده بموجب تحويل بنكي أو سند قبض أو مستند كتابي معتمد من الطرف الأول.',
-        'خامساً: عند التأخر أو الإخلال، يحق للطرف المتضرر المطالبة بتنفيذ الالتزامات والحقوق والتعويضات التي تجيزها الأنظمة، بعد اتباع الإجراءات النظامية، دون اعتبار أي إجراء غير منصوص عليه نظاماً نتيجة تلقائية لهذه الاتفاقية.',
-        'سادساً: لا يكون أي تعديل أو تنازل أو تمديد نافذاً إلا بموجب اتفاق كتابي موقع من الطرفين.',
-        'سابعاً: تكون الإخطارات على العناوين ووسائل التواصل المدونة في هذه الاتفاقية، ويلتزم كل طرف بإشعار الآخر كتابةً بأي تغيير يطرأ عليها.',
-        'ثامناً: تخضع هذه الاتفاقية للأنظمة المعمول بها في المملكة العربية السعودية، ويكون الاختصاص للجهة القضائية المختصة مكانياً ونوعياً في مدينة ' + (data.city || '........') + '، ما لم تقضِ قواعد الاختصاص بخلاف ذلك.',
-        'تاسعاً: حررت هذه الاتفاقية من ' + (data.copies || 'نسختين') + '، تسلم كل طرف نسخة للعمل بموجبها، بعد قراءتها وفهمها والموافقة على جميع بنودها.'
+        'التمهيد والتعاريف: يعد التمهيد وبيانات الطرفين ووصف سبب الالتزام والمستندات المحددة في هذه الاتفاقية جزءاً لا يتجزأ منها ومكملاً ومفسراً لبنودها.',
+        'الإقرار بأصل الالتزام: يقر الطرف الثاني، بعد اطلاعه على المستندات وبيان سبب الالتزام، بثبوت التزامه لصالح الطرف الأول بـ' + value + '، ويلتزم بأدائه وفق أحكام هذه الاتفاقية. ويجب أن تكون قيمة الالتزام أو آلية احتسابها محددة وقابلة للتحقق دون جهالة.',
+        'تحديد النسبة عند اختيار الالتزام النسبي: إذا كان الالتزام نسبة مئوية، فيجب تحديد الوعاء الذي تحتسب منه النسبة، والفترة الزمنية، وطريقة إثباته، وما يدخل فيه وما يستبعد منه. ولا يعتد بأي تغيير في الوعاء إلا بموافقة كتابية من الطرفين.',
+        'مواعيد السداد: يلتزم الطرف الثاني بالسداد في المواعيد والمبالغ المحددة في جدول السداد. وإذا كان السداد على أقساط، فيعد كل قسط مستحقاً في التاريخ المحدد له، ويثبت كل سداد بتحويل بنكي أو سند قبض أو مستند كتابي صادر من الطرف الأول.',
+        'طريقة الوفاء وإثباته: يكون السداد بالطريقة المتفق عليها، ولا تبرأ ذمة الطرف الثاني إلا بمقدار المبالغ التي تم استلامها فعلياً وثبتت بمستند معتبر. وتوضح بيانات الحساب البنكي في هذه الاتفاقية، ويكون أي تغيير فيها بإشعار مكتوب موثق من الطرف الأول.',
+        'المبالغ المسددة والرصيد: يخصم كل مبلغ مسدد من أصل الالتزام، ويحق لأي من الطرفين طلب كشف مكتوب يوضح الدفعات المسددة والمتبقي. ولا يعد استلام دفعة جزئية تنازلاً عن باقي الحق أو تعديلاً لمواعيد الاستحقاق ما لم يتفق الطرفان كتابةً على خلاف ذلك.',
+        'الإخلال والتأخر: عند تأخر الطرف الثاني عن سداد مبلغ مستحق، يحق للطرف الأول مطالبته كتابةً بالوفاء، واتخاذ الإجراءات النظامية للمطالبة بأصل الحق وما يجوز نظاماً من تعويض أو مصروفات. ولا تنشأ فوائد أو غرامات أو جزاءات مالية تلقائياً بموجب هذه الصيغة، ولا يطالب إلا بما تجيزه الأنظمة والاتفاقات الصحيحة.',
+        'عدم التنازل والتعديل: لا يعد سكوت الطرف الأول أو منحه مهلة أو قبوله سداداً جزئياً تنازلاً عن أي حق. ولا يكون أي تعديل أو تمديد أو تسوية أو إبراء نافذاً إلا بموجب محرر مكتوب يوافق عليه الطرفان.',
+        'صحة البيانات والصلاحيات: يقر كل طرف بصحة البيانات التي قدمها وبأن من وقع عنه، إن كان ممثلاً لمنشأة، يملك الصلاحية النظامية اللازمة للتوقيع، ويتحمل كل طرف مسؤولية صحة مستنداته وصفته.',
+        'الإخطارات: تكون الإخطارات والمطالبات على العناوين الوطنية ووسائل التواصل المدونة في صدر الاتفاقية، ويجب على كل طرف إشعار الآخر كتابةً بأي تغيير فيها. وتراعى في التبليغ وسائل الإثبات والمتطلبات النظامية ذات الصلة.',
+        'السرية والمستندات: يلتزم الطرفان بالمحافظة على سرية البيانات والمستندات المتبادلة وعدم استخدامها إلا لغرض تنفيذ هذه الاتفاقية، مع عدم الإخلال بما يلزم الإفصاح عنه للجهات المختصة أو بموجب النظام.',
+        'القانون والاختصاص: تخضع هذه الاتفاقية للأنظمة المعمول بها في المملكة العربية السعودية، ويكون نظر أي نزاع للجهة القضائية المختصة نوعياً ومكانياً وفق قواعد الاختصاص النظامية، ولا يغير تحديد المدينة في هذه الاتفاقية قواعد الاختصاص الآمرة.',
+        'النسخ والتوقيع: حررت هذه الاتفاقية من ' + (data.copies || 'نسختين أصليتين') + '، تسلم كل طرف نسخة للعمل بموجبها. ويقر الطرفان بأنهما قرآ جميع البنود وفهما آثارها ووقعا بإرادتهما المعتبرة، مع إرفاق ما يلزم من هويات وتفويضات ومستندات مؤيدة.'
       ];
-      if (data.extra) clauses.push('شروط إضافية: ' + data.extra);
+      if (data.extra) clauses.push('شروط خاصة إضافية اتفق عليها الطرفان: ' + data.extra);
+      if (data.evidence) clauses.push('المستندات المؤيدة للالتزام: ' + data.evidence);
       return clauses;
     }
     function renderAgreementSheet(data) {
       if (!agreementSheet) return;
       const date = data.date ? new Date(data.date + 'T00:00:00').toLocaleDateString('ar-SA') : '................';
-      const party = (name,id,address,phone) => '<div class="agreement-party"><b>' + agEsc(name || '........................') + '</b><div>رقم الهوية / السجل: ' + agEsc(id || '................') + '</div><div>العنوان: ' + agEsc(address || '................') + '</div><div>الجوال: ' + agEsc(phone || '................') + '</div></div>';
-      const clauses = agreementClauseText(data).map((line,i) => '<p><b>' + (i+1) + '.</b> ' + agEsc(line) + '</p>').join('');
+      const party = (name,id,address,phone) => '<div class="agreement-party"><b>' + agEsc(name || '........................') + '</b><div>رقم الهوية / السجل: ' + agEsc(id || '................') + '</div><div>العنوان الوطني: ' + agEsc(address || '................') + '</div><div>التواصل: ' + agEsc(phone || '................') + '</div></div>';
+      const clauses = agreementClauseText(data).map((line,i) => '<p class="agreement-clause"><b>' + (i+1) + '.</b> ' + agEsc(line) + '</p>').join('');
       const amount = data.kind === 'percentage' ? (data.percent || '....') + '% من ' + (data.basis || '................') : (data.amount || '................') + ' ريال سعودي';
       agreementSheet.innerHTML = `
-        <header class="agreement-doc-head"><div><h1>النسر الثاقب</h1><p>السجل التجاري 7054465872</p><p>الرقم الضريبي 314823033100003</p></div><img src="https://i.postimg.cc/Pfm5Rvd0/logo.png" alt="شعار النسر الثاقب"></header>
-        <div class="agreement-doc-title"><h2>${agEsc(data.title || 'اتفاقية إقرار والتزام مالي')}</h2><div>رقم الاتفاقية: <b>${agEsc(data.number || '................')}</b>　|　التاريخ: <b>${agEsc(date)}</b></div></div>
-        <p class="agreement-preamble">تم بعون الله في يوم تحرير هذه الاتفاقية، الاتفاق والتراضي بين كل من:</p>
-        <div class="agreement-parties"><div><b>الطرف الأول (الدائن / صاحب الحق)</b>${party(data['first-name'],data['first-id'],data['first-address'],data['first-phone'])}</div><div><b>الطرف الثاني (المدين / الملتزم)</b>${party(data['second-name'],data['second-id'],data['second-address'],data['second-phone'])}</div></div>
-        <p>ويشار إليهما مجتمعين بـ«الطرفين»، وقد أقر كل طرف بأهليته المعتبرة شرعاً ونظاماً للتعاقد والتصرف، واتفقا على ما يلي:</p>
-        <h3>موضوع الالتزام</h3><p>${agEsc(data.description || '................................................................................................')}</p>
-        <p><b>قيمة الالتزام:</b> ${agEsc(amount)}</p>
-        <p><b>طريقة السداد:</b> ${agEsc(data.payment || '................')}　 <b>أول استحقاق:</b> ${agEsc(data['first-due'] || '................')}</p>
-        <p><b>جدول السداد:</b><br>${agEsc(data.schedule || 'وفق ما يتفق عليه الطرفان كتابةً.').replace(/\n/g,'<br>')}</p>
-        <p><b>بيانات الحساب البنكي:</b><br>${agEsc(data.bank || '........................................................')}</p>
-        <h3>الشروط والأحكام</h3>${clauses}
-        <div class="agreement-signatures"><div><h3>الطرف الأول</h3><p>الاسم: ${agEsc(data['first-name'] || '................')}</p><p>التوقيع: ........................</p><p>التاريخ: ........................</p></div><div><h3>الطرف الثاني</h3><p>الاسم: ${agEsc(data['second-name'] || '................')}</p><p>التوقيع: ........................</p><p>التاريخ: ........................</p></div></div>
-        <div class="agreement-witnesses"><div><b>الشاهد الأول:</b> ${agEsc(data.witness1 || '................')}　 الهوية: ${agEsc(data['witness1-id'] || '................')}　 التوقيع: ................</div><div><b>الشاهد الثاني:</b> ${agEsc(data.witness2 || '................')}　 الهوية: ${agEsc(data['witness2-id'] || '................')}　 التوقيع: ................</div></div>
-        <footer class="agreement-doc-footer">الرياض – جدة　 |　 info@nisr.sa　 |　 0501767213 - 0510484749</footer>`;
+        <header class="doc-header-fixed">
+          <div class="company-brand"><h1 class="company-title">النسر الثاقب</h1><p class="company-sub">السجل التجاري 7054465872</p><p class="company-sub">الرقم الضريبي 314823033100003</p></div>
+          <div class="company-logo"><img src="https://i.postimg.cc/Pfm5Rvd0/logo.png" alt="شعار النسر الثاقب" class="official-logo-img"></div>
+        </header>
+        <div class="agreement-print-content">
+          <div class="doc-title-bar"><h2 class="doc-title">${agEsc(data.title || 'اتفاقية إقرار والتزام مالي')}</h2></div>
+          <div class="agreement-meta"><span>رقم الاتفاقية: <b>${agEsc(data.number || '................')}</b></span><span>التاريخ: <b>${agEsc(date)}</b></span></div>
+          <p>بعون الله وتوفيقه، أبرمت هذه الاتفاقية في مدينة ${agEsc(data.city || '................')} بين كل من:</p>
+          <div class="agreement-parties"><section><b>الطرف الأول (صاحب الحق)</b>${party(data['first-name'],data['first-id'],data['first-address'],data['first-phone'])}</section><section><b>الطرف الثاني (الملتزم)</b>${party(data['second-name'],data['second-id'],data['second-address'],data['second-phone'])}</section></div>
+          <p>ويشار إليهما مجتمعين بـ«الطرفين»، وقد أقر كل منهما بأهليته وصفته وصلاحية ممثله للتعاقد، واتفقا على ما يلي:</p>
+          <h3>موضوع الالتزام</h3><p>${agEsc(data.description || '........................................................')}</p>
+          <p><b>قيمة / أساس الالتزام:</b> ${agEsc(amount)}</p>
+          <p><b>طريقة السداد:</b> ${agEsc(data.payment || '................')}　 <b>أول استحقاق:</b> ${agEsc(data['first-due'] || '................')}</p>
+          <p><b>جدول السداد:</b> ${agEsc(data.schedule || 'وفق المواعيد المتفق عليها كتابةً.')}</p>
+          <p><b>بيانات الحساب البنكي:</b> ${agEsc(data.bank || '........................................................')}</p>
+          <h3>الشروط والأحكام</h3>${clauses}
+          <div class="agreement-signatures"><section><h3>الطرف الأول</h3><p>الاسم: ${agEsc(data['first-name'] || '................')}</p><p>التوقيع: ................................</p><p>التاريخ: ................................</p></section><section><h3>الطرف الثاني</h3><p>الاسم: ${agEsc(data['second-name'] || '................')}</p><p>التوقيع: ................................</p><p>التاريخ: ................................</p></section></div>
+          <div class="agreement-witnesses"><p><b>الشاهد الأول:</b> ${agEsc(data.witness1 || '................')}　 الهوية: ${agEsc(data['witness1-id'] || '................')}　 التوقيع: ................</p><p><b>الشاهد الثاني:</b> ${agEsc(data.witness2 || '................')}　 الهوية: ${agEsc(data['witness2-id'] || '................')}　 التوقيع: ................</p></div>
+        </div>
+        <footer class="doc-footer-fixed"><div class="footer-content"><span>العنوان : - الرياض – جدة</span><span class="footer-sep"></span><span>info@nisr.sa</span><span class="footer-sep"></span><span>0501767213 - 0510484749</span></div></footer>`;
     }
     async function loadAgreements() {
       if (!isManager || !supabaseClient) return;
@@ -1658,6 +1670,8 @@ document.addEventListener('DOMContentLoaded', () => {
       agreementWorkspace.hidden = false;
       document.getElementById('document-to-pdf').hidden = true;
       document.querySelector('.admin-control-bar').classList.add('agreement-header-mode');
+      if (btnHistory) btnHistory.textContent = 'عروض الأسعار';
+      if (btnOpenAgreements) btnOpenAgreements.textContent = '📑 اتفاقيات الالتزام';
       newAgreement();
       loadAgreements();
       window.scrollTo({top:0,behavior:'smooth'});
@@ -1667,6 +1681,7 @@ document.addEventListener('DOMContentLoaded', () => {
       agreementWorkspace.hidden = true;
       document.getElementById('document-to-pdf').hidden = false;
       document.querySelector('.admin-control-bar').classList.remove('agreement-header-mode');
+      if (btnHistory) btnHistory.textContent = 'عروض الأسعار';
     }
     if (btnOpenAgreements) btnOpenAgreements.addEventListener('click',showAgreements);
     document.getElementById('btn-agreement-home')?.addEventListener('click',showQuotes);
