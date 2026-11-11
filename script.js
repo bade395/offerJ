@@ -1120,7 +1120,7 @@ document.addEventListener('DOMContentLoaded', () => {
         button.innerText = 'جاري تجهيز PDF للجوال...';
         document.body.classList.add('rendering-pdf');
         try {
-            renderAgreementSheet(agreementDataFromForm());
+            if (agreementSheet?.dataset.userEdited !== 'true') renderAgreementSheet(agreementDataFromForm());
             const generated = await buildAgreementPdfBlob();
             const url = URL.createObjectURL(generated.blob);
             const link = document.createElement('a');
@@ -1674,7 +1674,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const agreementList = document.getElementById('agreement-list');
     const agreementStatus = document.getElementById('agreement-list-status');
     const agreementSheet = document.getElementById('agreement-print-sheet');
-    const agreementFields = ['number','date','title','first-name','first-id','first-address','first-phone','second-name','second-id','second-address','second-phone','kind','amount','percent','basis','description','evidence','payment','first-due','schedule','bank','extra','city','copies','witness1','witness1-id','witness2','witness2-id'];
+    const agreementFields = ['number','date','title','first-name','first-id','first-address','first-phone','second-name','second-id','second-address','second-phone','kind','amount','percent','basis','description','evidence','payment','first-due','schedule','bank','extra','city','copies'];
     let currentAgreementId = null;
     let agreementRows = [];
     const ag = key => document.getElementById('ag-' + key);
@@ -1682,6 +1682,8 @@ document.addEventListener('DOMContentLoaded', () => {
     function agreementDataFromForm() {
       const data = {};
       agreementFields.forEach(key => data[key] = ag(key)?.value?.trim() || '');
+      const liveContent = agreementSheet?.querySelector('.agreement-print-content');
+      data.custom_html = agreementSheet?.dataset.userEdited === 'true' && liveContent ? liveContent.innerHTML : '';
       return data;
     }
     function fillAgreementForm(data = {}) {
@@ -1731,6 +1733,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const party = (name,id,address,phone) => '<div class="agreement-party"><b>' + agEsc(name || '........................') + '</b><div>رقم الهوية / السجل: ' + agEsc(id || '................') + '</div><div>العنوان الوطني: ' + agEsc(address || '................') + '</div><div>التواصل: ' + agEsc(phone || '................') + '</div></div>';
       const clauses = agreementClauseText(data).map((line,i) => '<p class="agreement-clause"><b>' + (i+1) + '.</b> ' + agEsc(line) + '</p>').join('');
       const amount = data.kind === 'percentage' ? (data.percent || '....') + '% من ' + (data.basis || '................') : (data.amount || '................') + ' ريال سعودي';
+      agreementSheet.dataset.userEdited = 'false';
       agreementSheet.innerHTML = `
         <header class="doc-header-fixed">
           <div class="company-brand"><h1 class="company-title">النسر الثاقب</h1><p class="company-sub">السجل التجاري 7054465872</p><p class="company-sub">الرقم الضريبي 314823033100003</p></div>
@@ -1749,9 +1752,15 @@ document.addEventListener('DOMContentLoaded', () => {
           <p><b>بيانات الحساب البنكي:</b> ${agEsc(data.bank || '........................................................')}</p>
           <h3>الشروط والأحكام</h3>${clauses}
           <div class="agreement-signatures"><section><h3>الطرف الأول</h3><p>الاسم: ${agEsc(data['first-name'] || '................')}</p><p>التوقيع: ................................</p><p>التاريخ: ................................</p></section><section><h3>الطرف الثاني</h3><p>الاسم: ${agEsc(data['second-name'] || '................')}</p><p>التوقيع: ................................</p><p>التاريخ: ................................</p></section></div>
-          <div class="agreement-witnesses"><p><b>الشاهد الأول:</b> ${agEsc(data.witness1 || '................')}　 الهوية: ${agEsc(data['witness1-id'] || '................')}　 التوقيع: ................</p><p><b>الشاهد الثاني:</b> ${agEsc(data.witness2 || '................')}　 الهوية: ${agEsc(data['witness2-id'] || '................')}　 التوقيع: ................</p></div>
         </div>
         <footer class="doc-footer-fixed"><div class="footer-content"><span>العنوان : - الرياض – جدة</span><span class="footer-sep"></span><span>info@nisr.sa</span><span class="footer-sep"></span><span>0501767213 - 0510484749</span></div></footer>`;
+      if (data.custom_html) {
+        const liveContent = agreementSheet.querySelector('.agreement-print-content');
+        if (liveContent) liveContent.innerHTML = data.custom_html;
+        agreementSheet.dataset.userEdited = 'true';
+      }
+      const editableContent = agreementSheet.querySelector('.agreement-print-content');
+      if (editableContent) editableContent.setAttribute('contenteditable', 'true');
     }
     async function loadAgreements() {
       if (!isManager || !supabaseClient) return;
@@ -1831,6 +1840,9 @@ document.addEventListener('DOMContentLoaded', () => {
       const del=event.target.closest('[data-ag-delete]'); if(del) deleteAgreement(del.dataset.agDelete);
     });
     agreementForm?.addEventListener('input',()=>renderAgreementSheet(agreementDataFromForm()));
+    agreementSheet?.addEventListener('input', event => {
+      if (event.target.closest('.agreement-print-content')) agreementSheet.dataset.userEdited = 'true';
+    });
 
     generateAutoMeta();
     renderItems();
