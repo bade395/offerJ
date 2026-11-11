@@ -1644,3 +1644,146 @@ body.agreement-mode .agreement-editor { min-width: 0; }
     margin: 38mm 16mm 27mm 16mm;
   }
 }
+
+
+/* Final mobile + desktop agreement PDF layout: keep every page inside A4 safe area. */
+@media print {
+  @page {
+    size: A4 portrait;
+    /* Header and footer stay in the paper bands; agreement text stays inside the page frame. */
+    margin: 38mm 16mm 27mm 16mm;
+  }
+
+  html,
+  body,
+  body.agreement-mode,
+  body.agreement-printing {
+    width: auto !important;
+    min-width: 0 !important;
+    height: auto !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    background: #fff !important;
+  }
+
+  body.agreement-printing > :not(#agreement-workspace) {
+    display: none !important;
+    visibility: hidden !important;
+  }
+
+  body.agreement-printing #document-to-pdf,
+  body.agreement-printing .admin-control-bar,
+  body.agreement-printing .agreement-toolbar,
+  body.agreement-printing .agreement-list-panel,
+  body.agreement-printing #agreement-form,
+  body.agreement-printing .agreement-legal-note {
+    display: none !important;
+  }
+
+  body.agreement-printing #agreement-workspace,
+  body.agreement-printing .agreement-layout,
+  body.agreement-printing .agreement-editor {
+    display: block !important;
+    width: auto !important;
+    max-width: none !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    overflow: visible !important;
+  }
+
+  body.agreement-printing .agreement-print-sheet {
+    display: block !important;
+    position: relative !important;
+    width: auto !important;
+    max-width: none !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-sizing: border-box !important;
+    overflow: visible !important;
+    background-image: url('https://i.postimg.cc/Bbs40NJc/alkhlfyt.jpg') !important;
+    background-position: top center !important;
+    background-size: 210mm 297mm !important;
+    background-repeat: repeat-y !important;
+    color: #1f2937 !important;
+    font-family: 'Tajawal', Arial, sans-serif !important;
+    font-size: 11.5pt !important;
+    line-height: 1.65 !important;
+    print-color-adjust: exact !important;
+    -webkit-print-color-adjust: exact !important;
+    break-inside: auto !important;
+    page-break-inside: auto !important;
+  }
+
+  body.agreement-printing .agreement-print-content {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    line-height: 1.65 !important;
+    overflow-wrap: anywhere !important;
+    word-break: normal !important;
+  }
+
+  body.agreement-printing .agreement-print-content h2,
+  body.agreement-printing .agreement-print-content h3 {
+    break-after: avoid-page !important;
+    page-break-after: avoid !important;
+  }
+
+  /* Long clauses can flow onto the next page; they must never run beyond the lower page edge. */
+  body.agreement-printing .agreement-clause {
+    display: block !important;
+    margin: 5px 0 7px !important;
+    line-height: 1.65 !important;
+    text-align: justify !important;
+    break-inside: auto !important;
+    page-break-inside: auto !important;
+    orphans: 3 !important;
+    widows: 3 !important;
+  }
+
+  body.agreement-printing .agreement-print-content p {
+    margin: 5px 0 !important;
+    orphans: 3 !important;
+    widows: 3 !important;
+  }
+
+  body.agreement-printing .agreement-meta,
+  body.agreement-printing .agreement-parties,
+  body.agreement-printing .agreement-party,
+  body.agreement-printing .agreement-signatures,
+  body.agreement-printing .agreement-signatures section,
+  body.agreement-printing .agreement-witnesses {
+    break-inside: avoid-page !important;
+    page-break-inside: avoid !important;
+  }
+
+  body.agreement-printing .agreement-signatures {
+    margin-top: 16px !important;
+  }
+
+  /* Stationery header/footer repeat on each printed page, outside the text safe area. */
+  body.agreement-printing .agreement-print-sheet .doc-header-fixed {
+    position: fixed !important;
+    top: -33mm !important;
+    left: -2mm !important;
+    right: -2mm !important;
+    height: 26mm !important;
+  }
+
+  body.agreement-printing .agreement-print-sheet .doc-footer-fixed {
+    position: fixed !important;
+    bottom: -22mm !important;
+    left: -2mm !important;
+    right: -2mm !important;
+    margin: 0 !important;
+  }
+}
