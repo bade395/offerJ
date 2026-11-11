@@ -1787,3 +1787,17 @@ body.agreement-mode .agreement-editor { min-width: 0; }
     margin: 0 !important;
   }
 }
+
+
+/* Live agreement editor: show the complete print-layout preview while entering data. */
+.agreement-editor { display:flex; flex-direction:column; gap:24px; }
+.agreement-input-page { width:min(210mm,100%); margin:0 auto; min-height:297mm; height:auto; overflow:visible; background-size:100% 297mm !important; }
+.agreement-print-sheet { display:block !important; position:relative; width:min(210mm,100%); min-height:297mm; margin:0 auto 30px; padding:39mm 16mm 27mm; box-sizing:border-box; overflow:visible; background:url('https://i.postimg.cc/Bbs40NJc/alkhlfyt.jpg') top center / 100% 297mm repeat-y; box-shadow:0 10px 30px rgba(0,0,0,.18); color:#1f2937; font-family:'Tajawal',Arial,sans-serif; font-size:12px; line-height:1.75; }
+.agreement-print-sheet .doc-header-fixed { position:absolute; top:5mm; left:14mm; right:14mm; }
+.agreement-print-sheet .doc-footer-fixed { position:relative; left:auto; right:auto; bottom:auto; margin-top:24px; }
+.agreement-print-content[contenteditable="true"] { outline:1px dashed transparent; border-radius:4px; min-height:120px; }
+.agreement-print-content[contenteditable="true"]:focus { outline-color:#b28a20; background:rgba(255,255,255,.14); }
+.agreement-print-content h2,.agreement-print-content h3,.agreement-print-content p,.agreement-print-content .agreement-party { cursor:text; }
+.agreement-print-content .agreement-clause { margin:6px 0; text-align:justify; }
+@media(max-width:650px) { .agreement-print-sheet { padding:35mm 7mm 22mm; background-size:100% 297mm; } .agreement-print-sheet .doc-header-fixed { left:7mm; right:7mm; } }
+@media print { .agreement-print-sheet { display:none !important; } }
