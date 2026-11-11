@@ -50,8 +50,9 @@
                 </button>
                 <button type="button" class="btn btn-history manager-only" id="btn-history" title="سجل العروض - للمدير فقط" hidden>
                     <span aria-hidden="true">📋</span>
-                    سجل العروض
+                    عروض الأسعار
                 </button>
+                <button type="button" class="btn btn-agreements manager-only" id="btn-open-agreements" hidden>📑 اتفاقيات الالتزام</button>
                 <button type="button" class="btn btn-print" id="btn-print">
                     <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
                     طباعة العرض
@@ -266,6 +267,68 @@
         </div>
 
         </main>
+
+    <section id="agreement-workspace" class="agreement-workspace no-print" hidden>
+      <div class="agreement-toolbar">
+        <div><h2>إدارة اتفاقيات الالتزام</h2><p>إنشاء الاتفاقيات وحفظها ومراجعتها وإصدار نسخة للطباعة أو PDF.</p></div>
+        <div class="agreement-toolbar-actions">
+          <button type="button" class="btn btn-history" id="btn-agreement-home">العودة لعروض الأسعار</button>
+          <button type="button" class="btn btn-add" id="btn-agreement-new">＋ اتفاقية جديدة</button>
+          <button type="button" class="btn btn-save-quote" id="btn-agreement-save">💾 حفظ الاتفاقية</button>
+          <button type="button" class="btn btn-print" id="btn-agreement-print">طباعة / PDF</button>
+        </div>
+      </div>
+      <div class="agreement-layout">
+        <aside class="agreement-list-panel">
+          <h3>الاتفاقيات المحفوظة</h3>
+          <input id="agreement-search" type="search" placeholder="بحث برقم الاتفاقية أو الاسم">
+          <div id="agreement-list-status" class="quote-history-status">جاري تحميل الاتفاقيات...</div>
+          <div id="agreement-list" class="agreement-list"></div>
+        </aside>
+        <div class="agreement-editor">
+          <form id="agreement-form" autocomplete="off">
+            <input type="hidden" id="agreement-id">
+            <div class="agreement-form-heading">بيانات الاتفاقية</div>
+            <div class="agreement-fields">
+              <label>رقم الاتفاقية<input id="ag-number" required></label>
+              <label>تاريخ الاتفاقية<input id="ag-date" type="date" required></label>
+              <label class="wide">عنوان الاتفاقية<input id="ag-title" value="اتفاقية إقرار والتزام مالي" required></label>
+              <div class="agreement-form-heading wide">الطرف الأول (الدائن / صاحب الحق)</div>
+              <label>الاسم / اسم المنشأة<input id="ag-first-name" required></label>
+              <label>رقم الهوية / السجل التجاري<input id="ag-first-id"></label>
+              <label>العنوان الوطني<input id="ag-first-address"></label>
+              <label>رقم الجوال<input id="ag-first-phone"></label>
+              <div class="agreement-form-heading wide">الطرف الثاني (المدين / الملتزم)</div>
+              <label>الاسم / اسم المنشأة<input id="ag-second-name" required></label>
+              <label>رقم الهوية / السجل التجاري<input id="ag-second-id"></label>
+              <label>العنوان الوطني<input id="ag-second-address"></label>
+              <label>رقم الجوال<input id="ag-second-phone"></label>
+              <div class="agreement-form-heading wide">موضوع الالتزام المالي</div>
+              <label>نوع الالتزام<select id="ag-kind"><option value="fixed">مبلغ ثابت</option><option value="percentage">نسبة مئوية</option></select></label>
+              <label>قيمة الالتزام<input id="ag-amount" inputmode="decimal" placeholder="مثال: 25000"></label>
+              <label>النسبة المئوية (%)<input id="ag-percent" inputmode="decimal" placeholder="تُستخدم عند اختيار النسبة"></label>
+              <label>أساس احتساب النسبة<input id="ag-basis" placeholder="مثال: صافي قيمة العقد رقم..."></label>
+              <label class="wide">سبب / وصف الالتزام<textarea id="ag-description" rows="3" placeholder="تفاصيل سبب نشوء الالتزام والمستندات المرتبطة به"></textarea></label>
+              <div class="agreement-form-heading wide">السداد والإخلال</div>
+              <label>طريقة السداد<select id="ag-payment"><option>تحويل بنكي</option><option>نقداً بموجب سند قبض</option><option>دفعات / أقساط</option><option>أخرى</option></select></label>
+              <label>تاريخ استحقاق أول دفعة<input id="ag-first-due" type="date"></label>
+              <label class="wide">جدول السداد / الأقساط<textarea id="ag-schedule" rows="3" placeholder="مثال: 5,000 ريال بتاريخ ... ثم ..."></textarea></label>
+              <label class="wide">بيانات الحساب البنكي<textarea id="ag-bank" rows="2" placeholder="اسم البنك، اسم المستفيد، رقم الآيبان"></textarea></label>
+              <label class="wide">شروط إضافية متفق عليها<textarea id="ag-extra" rows="3"></textarea></label>
+              <label>مدينة الاختصاص القضائي<input id="ag-city" value="الرياض"></label>
+              <label>عدد النسخ الأصلية<input id="ag-copies" value="نسختان أصليتان"></label>
+              <div class="agreement-form-heading wide">الشهود والتوقيعات</div>
+              <label>الشاهد الأول<input id="ag-witness1"></label>
+              <label>هوية الشاهد الأول<input id="ag-witness1-id"></label>
+              <label>الشاهد الثاني<input id="ag-witness2"></label>
+              <label>هوية الشاهد الثاني<input id="ag-witness2-id"></label>
+            </div>
+            <p class="agreement-legal-note">تنبيه: هذه صيغة تعاقدية قابلة للمراجعة وليست استشارة قانونية. لا يصبح العقد العادي سنداً تنفيذياً تلقائياً؛ وتحدد صفته التنفيذية وفق الأنظمة وشروط التوثيق المعمول بها في المملكة.</p>
+          </form>
+          <article id="agreement-print-sheet" class="agreement-print-sheet" dir="rtl"></article>
+        </div>
+      </div>
+    </section>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
