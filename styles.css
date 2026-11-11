@@ -1525,3 +1525,122 @@ body.agreement-mode .agreement-editor { min-width: 0; }
 @media screen and (max-width: 1000px) {
   body.agreement-mode .agreement-layout { grid-template-columns: 1fr; }
 }
+
+
+/* Final agreement export correction: true A4 page margins and strict print isolation. */
+@media print {
+  /* Print only the agreement workspace; quote pages cannot create trailing blank sheets. */
+  body.agreement-printing > :not(#agreement-workspace) {
+    display: none !important;
+    visibility: hidden !important;
+  }
+  body.agreement-printing #document-to-pdf {
+    display: none !important;
+    visibility: hidden !important;
+    position: absolute !important;
+    width: 0 !important;
+    height: 0 !important;
+    overflow: hidden !important;
+  }
+  body.agreement-printing #agreement-workspace {
+    display: block !important;
+    visibility: visible !important;
+    position: static !important;
+    width: auto !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+  }
+  body.agreement-printing .agreement-toolbar,
+  body.agreement-printing .agreement-list-panel,
+  body.agreement-printing #agreement-form,
+  body.agreement-printing .agreement-legal-note,
+  body.agreement-printing .admin-control-bar {
+    display: none !important;
+  }
+  body.agreement-printing .agreement-layout,
+  body.agreement-printing .agreement-editor {
+    display: block !important;
+    width: auto !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    overflow: visible !important;
+  }
+  body.agreement-printing .agreement-print-sheet {
+    display: block !important;
+    position: static !important;
+    width: auto !important;
+    max-width: none !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-sizing: border-box !important;
+    overflow: visible !important;
+    background: url('https://i.postimg.cc/Bbs40NJc/alkhlfyt.jpg') top center / 210mm 297mm repeat-y !important;
+    color: #1f2937 !important;
+    font-family: 'Tajawal', Arial, sans-serif !important;
+    font-size: 11.5pt !important;
+    line-height: 1.65 !important;
+    print-color-adjust: exact !important;
+    -webkit-print-color-adjust: exact !important;
+    break-inside: auto !important;
+    page-break-inside: auto !important;
+  }
+  body.agreement-printing .agreement-print-content {
+    display: block !important;
+    width: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    line-height: 1.65 !important;
+    overflow-wrap: anywhere !important;
+    word-break: normal !important;
+  }
+  /* Let long clauses split naturally instead of overflowing below the printable area. */
+  body.agreement-printing .agreement-clause {
+    display: block !important;
+    margin: 5px 0 7px !important;
+    line-height: 1.65 !important;
+    text-align: justify !important;
+    break-inside: auto !important;
+    page-break-inside: auto !important;
+    orphans: 3 !important;
+    widows: 3 !important;
+  }
+  body.agreement-printing .agreement-print-content p {
+    margin: 5px 0 !important;
+    orphans: 3 !important;
+    widows: 3 !important;
+  }
+  body.agreement-printing .agreement-meta,
+  body.agreement-printing .agreement-parties,
+  body.agreement-printing .agreement-party,
+  body.agreement-printing .agreement-signatures,
+  body.agreement-printing .agreement-signatures section,
+  body.agreement-printing .agreement-witnesses {
+    break-inside: avoid-page !important;
+    page-break-inside: avoid !important;
+  }
+  body.agreement-printing .agreement-print-sheet .doc-header-fixed {
+    position: fixed !important;
+    top: 5mm !important;
+    left: 14mm !important;
+    right: 14mm !important;
+    height: 26mm !important;
+  }
+  body.agreement-printing .agreement-print-sheet .doc-footer-fixed {
+    position: fixed !important;
+    bottom: 5mm !important;
+    left: 14mm !important;
+    right: 14mm !important;
+    margin: 0 !important;
+  }
+  /* Reserve a real header/footer band on EVERY A4 page. */
+  @page {
+    size: A4 portrait;
+    margin: 38mm 16mm 27mm 16mm;
+  }
+}
