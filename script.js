@@ -1637,7 +1637,9 @@ document.addEventListener('DOMContentLoaded', () => {
     async function saveAgreement() {
       if (!isManager || !supabaseClient) return;
       const data = agreementDataFromForm();
-      if (!data.number || !data.date || !data['first-name'] || !data['second-name']) { alert('يرجى إدخال رقم الاتفاقية والتاريخ واسم الطرفين على الأقل.'); return; }
+      if (!data.number || !data.date || !data['first-name'] || !data['second-name'] || !data.description || !data.schedule) { alert('يرجى استكمال رقم الاتفاقية والتاريخ وبيانات الطرفين وسبب الالتزام وجدول السداد.'); return; }
+      if (data.kind === 'fixed' && !(Number(data.amount) > 0)) { alert('أدخل مبلغ الالتزام الثابت بصورة صحيحة.'); ag('amount').focus(); return; }
+      if (data.kind === 'percentage' && (!(Number(data.percent) > 0) || !data.basis)) { alert('أدخل النسبة المئوية وحدد أساس احتسابها بوضوح.'); ag('percent').focus(); return; }
       const payload = {agreement_number:data.number,agreement_date:data.date,title:data.title || 'اتفاقية إقرار والتزام مالي',data,updated_at:new Date().toISOString()};
       let result;
       if (currentAgreementId) result = await supabaseClient.from('commitment_agreements').update(payload).eq('id',currentAgreementId).select().single();
