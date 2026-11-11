@@ -1683,7 +1683,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const data = {};
       agreementFields.forEach(key => data[key] = ag(key)?.value?.trim() || '');
       const liveContent = agreementSheet?.querySelector('.agreement-print-content');
-      data.custom_html = agreementSheet?.dataset.userEdited === 'true' && liveContent ? liveContent.innerHTML : '';
+      data.custom_html = agreementSheet?.dataset.userEdited === 'true' && agreementSheet ? agreementSheet.innerHTML : '';
       return data;
     }
     function fillAgreementForm(data = {}) {
@@ -1755,12 +1755,11 @@ document.addEventListener('DOMContentLoaded', () => {
         </div>
         <footer class="doc-footer-fixed"><div class="footer-content"><span>العنوان : - الرياض – جدة</span><span class="footer-sep"></span><span>info@nisr.sa</span><span class="footer-sep"></span><span>0501767213 - 0510484749</span></div></footer>`;
       if (data.custom_html) {
-        const liveContent = agreementSheet.querySelector('.agreement-print-content');
-        if (liveContent) liveContent.innerHTML = data.custom_html;
+        agreementSheet.innerHTML = data.custom_html;
         agreementSheet.dataset.userEdited = 'true';
       }
-      const editableContent = agreementSheet.querySelector('.agreement-print-content');
-      if (editableContent) editableContent.setAttribute('contenteditable', 'true');
+      agreementSheet.setAttribute('contenteditable', 'true');
+      agreementSheet.setAttribute('spellcheck', 'false');
     }
     async function loadAgreements() {
       if (!isManager || !supabaseClient) return;
@@ -1779,9 +1778,9 @@ document.addEventListener('DOMContentLoaded', () => {
     async function saveAgreement() {
       if (!isManager || !supabaseClient) return;
       const data = agreementDataFromForm();
-      if (!data.number || !data.date || !data['first-name'] || !data['second-name'] || !data.description || !data.schedule) { alert('يرجى استكمال رقم الاتفاقية والتاريخ وبيانات الطرفين وسبب الالتزام وجدول السداد.'); return; }
-      if (data.kind === 'fixed' && !(Number(data.amount) > 0)) { alert('أدخل مبلغ الالتزام الثابت بصورة صحيحة.'); ag('amount').focus(); return; }
-      if (data.kind === 'percentage' && (!(Number(data.percent) > 0) || !data.basis)) { alert('أدخل النسبة المئوية وحدد أساس احتسابها بوضوح.'); ag('percent').focus(); return; }
+      if (!data.custom_html && (!data.number || !data.date || !data['first-name'] || !data['second-name'] || !data.description || !data.schedule)) { alert('يرجى استكمال رقم الاتفاقية والتاريخ وبيانات الطرفين وسبب الالتزام وجدول السداد.'); return; }
+      if (!data.custom_html && data.kind === 'fixed' && !(Number(data.amount) > 0)) { alert('أدخل مبلغ الالتزام الثابت بصورة صحيحة.'); ag('amount').focus(); return; }
+      if (!data.custom_html && data.kind === 'percentage' && (!(Number(data.percent) > 0) || !data.basis)) { alert('أدخل النسبة المئوية وحدد أساس احتسابها بوضوح.'); ag('percent').focus(); return; }
       const payload = {agreement_number:data.number,agreement_date:data.date,title:data.title || 'اتفاقية إقرار والتزام مالي',data,updated_at:new Date().toISOString()};
       let result;
       if (currentAgreementId) result = await supabaseClient.from('commitment_agreements').update(payload).eq('id',currentAgreementId).select().single();
@@ -1841,7 +1840,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     agreementForm?.addEventListener('input',()=>renderAgreementSheet(agreementDataFromForm()));
     agreementSheet?.addEventListener('input', event => {
-      if (event.target.closest('.agreement-print-content')) agreementSheet.dataset.userEdited = 'true';
+      if (event.target.closest('#agreement-print-sheet')) agreementSheet.dataset.userEdited = 'true';
     });
 
     generateAutoMeta();
