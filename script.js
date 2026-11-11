@@ -1689,7 +1689,14 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btn-agreement-home')?.addEventListener('click',showQuotes);
     document.getElementById('btn-agreement-new')?.addEventListener('click',newAgreement);
     document.getElementById('btn-agreement-save')?.addEventListener('click',saveAgreement);
-    document.getElementById('btn-agreement-print')?.addEventListener('click',()=>{ if (!isManager) return; renderAgreementSheet(agreementDataFromForm()); window.print(); });
+    document.getElementById('btn-agreement-print')?.addEventListener('click',()=>{
+      if (!isManager) return;
+      renderAgreementSheet(agreementDataFromForm());
+      document.body.classList.add('agreement-printing');
+      // Wait one frame so print layout is recalculated with the quote document excluded.
+      requestAnimationFrame(() => window.print());
+    });
+    window.addEventListener('afterprint',()=>document.body.classList.remove('agreement-printing'));
     document.getElementById('agreement-search')?.addEventListener('input',renderAgreementList);
     agreementList?.addEventListener('click',event=>{
       const edit=event.target.closest('[data-ag-edit]'); if(edit) openAgreement(edit.dataset.agEdit);
