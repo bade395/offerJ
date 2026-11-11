@@ -1379,3 +1379,149 @@ body.quote-read-only #btn-export-pdf-mobile { display: inline-flex !important; }
  }
  body.agreement-mode .agreement-print-content { padding-bottom:10mm; }
 }
+
+
+/* Agreement workspace isolation + predictable multi-page document layout (2026-11-11). */
+/* Some component display rules override the browser's default [hidden] behavior. */
+[hidden] { display: none !important; }
+body.agreement-mode #document-to-pdf,
+body.agreement-mode .admin-control-bar {
+  display: none !important;
+}
+body.agreement-mode #agreement-workspace {
+  display: block !important;
+  visibility: visible !important;
+  width: 100%;
+  max-width: none;
+  margin: 0 auto;
+}
+body.agreement-mode .agreement-workspace[hidden] { display: none !important; }
+body.agreement-mode .agreement-layout {
+  display: grid;
+  grid-template-columns: minmax(240px, 300px) minmax(0, 1fr);
+  align-items: start;
+  gap: 20px;
+}
+body.agreement-mode .agreement-editor { min-width: 0; }
+
+/* Keep the editable A4 sheet aligned to the official stationery margins. */
+.agreement-input-page {
+  box-sizing: border-box !important;
+  background-position: top center !important;
+}
+.agreement-inline-form {
+  box-sizing: border-box;
+  padding-left: 16mm !important;
+  padding-right: 16mm !important;
+}
+.agreement-fields label { min-width: 0; }
+.agreement-fields input,
+.agreement-fields textarea {
+  box-sizing: border-box;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+.agreement-fields textarea {
+  min-height: 58px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+/* Print/PDF: content flows naturally across A4 pages with a safe header/footer zone. */
+@media print {
+  html, body { width: 210mm !important; height: auto !important; }
+  body.agreement-mode #document-to-pdf,
+  body.agreement-mode .admin-control-bar,
+  body.agreement-mode .agreement-toolbar,
+  body.agreement-mode .agreement-list-panel,
+  body.agreement-mode #agreement-form,
+  body.agreement-mode .agreement-legal-note { display: none !important; }
+  body.agreement-mode #agreement-workspace {
+    display: block !important;
+    width: 210mm !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  body.agreement-mode .agreement-layout,
+  body.agreement-mode .agreement-editor {
+    display: block !important;
+    width: 210mm !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+  }
+  body.agreement-mode .agreement-print-sheet {
+    display: block !important;
+    position: relative !important;
+    width: 210mm !important;
+    max-width: none !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 40mm 16mm 27mm !important;
+    box-sizing: border-box !important;
+    background: url('https://i.postimg.cc/Bbs40NJc/alkhlfyt.jpg') top center / 210mm 297mm repeat-y !important;
+    color: #1f2937;
+    font-family: 'Tajawal', Arial, sans-serif;
+    font-size: 11.5pt;
+    line-height: 1.65;
+    print-color-adjust: exact !important;
+    -webkit-print-color-adjust: exact !important;
+    break-inside: auto !important;
+    page-break-inside: auto !important;
+  }
+  body.agreement-mode .agreement-print-content {
+    padding: 0 !important;
+    margin: 0 !important;
+    line-height: 1.65 !important;
+    overflow-wrap: anywhere;
+    word-break: normal;
+  }
+  body.agreement-mode .agreement-print-content h2,
+  body.agreement-mode .agreement-print-content h3 {
+    break-after: avoid-page;
+    page-break-after: avoid;
+  }
+  body.agreement-mode .agreement-meta,
+  body.agreement-mode .agreement-parties,
+  body.agreement-mode .agreement-party,
+  body.agreement-mode .agreement-signatures,
+  body.agreement-mode .agreement-signatures section,
+  body.agreement-mode .agreement-witnesses {
+    break-inside: avoid-page;
+    page-break-inside: avoid;
+  }
+  body.agreement-mode .agreement-clause {
+    margin: 5px 0 7px !important;
+    text-align: justify;
+    line-height: 1.7 !important;
+    orphans: 3;
+    widows: 3;
+    break-inside: avoid-page;
+    page-break-inside: avoid;
+  }
+  body.agreement-mode .agreement-print-content p {
+    margin: 6px 0 !important;
+    orphans: 3;
+    widows: 3;
+  }
+  body.agreement-mode .agreement-signatures { margin-top: 16px !important; }
+  body.agreement-mode .agreement-print-sheet .doc-header-fixed {
+    position: fixed !important;
+    top: 5mm !important;
+    left: 14mm !important;
+    right: 14mm !important;
+    height: 26mm !important;
+  }
+  body.agreement-mode .agreement-print-sheet .doc-footer-fixed {
+    position: fixed !important;
+    bottom: 5mm !important;
+    left: 14mm !important;
+    right: 14mm !important;
+    margin: 0 !important;
+  }
+  @page { size: A4 portrait; margin: 0; }
+}
+@media screen and (max-width: 1000px) {
+  body.agreement-mode .agreement-layout { grid-template-columns: 1fr; }
+}
