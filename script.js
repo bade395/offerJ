@@ -1962,7 +1962,6 @@ document.addEventListener('DOMContentLoaded', () => {
       const editable = event.target.closest('[data-ag-field]');
       if (editable) syncAgreementCompanyNames(editable.dataset.agField, editable.textContent.trim());
       agreementSheet.dataset.userEdited = 'true';
-      paginateServiceAgreement();
     });
 
     function renumberAgreementClauses() {
@@ -2031,7 +2030,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.getElementById('btn-agreement-add-clause')?.addEventListener('click', addAgreementClause);
     agreementSheet?.addEventListener('blur', event => {
-      if (event.target.closest('.agreement-print-content')) renumberAgreementClauses();
+      if (event.target.closest('.agreement-print-content')) {
+        paginateServiceAgreement();
+        renumberAgreementClauses();
+      }
     }, true);
 
 
