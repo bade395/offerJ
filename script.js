@@ -1014,8 +1014,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const PAGE_W = 794;
         const PAGE_H = 1123;
-        const TOP = Math.round(34 * PAGE_H / 297);
-        const BOTTOM = Math.round(25 * PAGE_H / 297);
+        const TOP = Math.round(42 * PAGE_H / 297);
+        const BOTTOM = Math.round(17 * PAGE_H / 297);
         const SIDE = Math.round(14 * PAGE_W / 210);
         const CONTENT_H = PAGE_H - TOP - BOTTOM;
         const scale = Math.min(2, Math.max(1.5, window.devicePixelRatio || 1));
@@ -1037,7 +1037,7 @@ document.addEventListener('DOMContentLoaded', () => {
           #agreement-pdf-export-stage .agreement-pdf-page { position:relative !important; width:${PAGE_W}px !important; height:${PAGE_H}px !important; min-height:${PAGE_H}px !important; max-height:${PAGE_H}px !important; overflow:hidden !important; margin:0 !important; padding:0 !important; background:#fff url('https://i.postimg.cc/Bbs40NJc/alkhlfyt.jpg') center center / 100% 100% no-repeat !important; }
           #agreement-pdf-export-stage .agreement-pdf-header { position:absolute !important; top:19px !important; left:${SIDE}px !important; right:${SIDE}px !important; height:98px !important; overflow:hidden !important; }
           #agreement-pdf-export-stage .agreement-pdf-footer { position:absolute !important; left:${SIDE}px !important; right:${SIDE}px !important; bottom:18px !important; margin:0 !important; }
-          #agreement-pdf-export-stage .agreement-pdf-content { position:absolute !important; top:${Math.round(34 * PAGE_H / 297)}px !important; left:${SIDE}px !important; right:${SIDE}px !important; width:auto !important; height:${CONTENT_H}px !important; max-height:${CONTENT_H}px !important; overflow:hidden !important; margin:0 !important; padding:0 !important; font-family:Tajawal,Arial,sans-serif !important; font-size:9pt !important; line-height:1.32 !important; color:#1f2937 !important; }
+          #agreement-pdf-export-stage .agreement-pdf-content { position:absolute !important; top:${TOP}px !important; left:${SIDE}px !important; right:${SIDE}px !important; width:auto !important; height:${CONTENT_H}px !important; max-height:${CONTENT_H}px !important; overflow:hidden !important; margin:0 !important; padding:0 !important; font-family:Tajawal,Arial,sans-serif !important; font-size:10pt !important; line-height:1.42 !important; color:#1f2937 !important; }
           #agreement-pdf-export-stage .agreement-pdf-content > * { max-width:100% !important; }
           #agreement-pdf-export-stage .agreement-clause { break-inside:auto !important; page-break-inside:auto !important; }
         `;
@@ -1084,6 +1084,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const sourceContent = livePage.querySelector('.agreement-print-content');
             if (!sourceContent || !sourceContent.children.length) throw new Error('لا توجد بنود لتصديرها');
             const current = makePage(livePage);
+            current.content.style.fontSize = window.getComputedStyle(sourceContent).fontSize;
+            current.content.style.lineHeight = window.getComputedStyle(sourceContent).lineHeight;
             Array.from(sourceContent.children).forEach(node => {
                 const clone = node.cloneNode(true);
                 clone.querySelectorAll('.no-print, [data-ag-remove-clause]').forEach(el => el.remove());
@@ -1856,31 +1858,35 @@ document.addEventListener('DOMContentLoaded', () => {
         if (node.matches('.doc-title-bar') && /تكملة/.test(node.textContent)) return;
         if (node.classList.contains('agreement-flow-block')) {
           Array.from(node.childNodes).forEach(child => first.appendChild(child));
-        } else {
-          first.appendChild(node);
-        }
+        } else first.appendChild(node);
       });
-      if (second) {
-        second.innerHTML = '';
-        secondPage.style.display = 'none';
-      }
+      if (second) { second.innerHTML = ''; secondPage.style.display = 'none'; }
       firstPage.style.display = '';
       first.setAttribute('contenteditable','false');
       first.setAttribute('spellcheck','false');
       first.querySelectorAll('[data-ag-field], .agreement-clause-text').forEach(el => el.setAttribute('contenteditable','true'));
 
-      // Fit the complete agreement, including both signature blocks, into one A4 sheet.
-      first.style.fontSize = '9.4px';
-      first.style.lineHeight = '1.32';
-      first.querySelectorAll('h3').forEach(el => { el.style.marginTop = '4px'; el.style.marginBottom = '2px'; el.style.paddingBottom = '1px'; });
-      first.querySelectorAll('p').forEach(el => { el.style.marginTop = '2px'; el.style.marginBottom = '2px'; });
-      first.querySelectorAll('.agreement-bank-box').forEach(el => { el.style.margin = '4px 0'; el.style.padding = '4px 7px'; });
-      first.querySelectorAll('.agreement-service-list').forEach(el => { el.style.margin = '1px 0 3px'; el.style.paddingInlineStart = '18px'; });
-      first.querySelectorAll('.agreement-service-list li').forEach(el => { el.style.margin = '1px 0'; el.style.lineHeight = '1.3'; });
-      first.querySelectorAll('.service-agreement-signatures').forEach(el => { el.style.marginTop = '5px'; el.style.gap = '8px'; });
-      first.querySelectorAll('.service-agreement-signatures section').forEach(el => { el.style.minHeight = '66px'; el.style.padding = '4px 7px'; });
-      first.querySelectorAll('.service-agreement-signatures h3').forEach(el => { el.style.margin = '0 0 3px'; });
-      first.querySelectorAll('.agreement-sign-line').forEach(el => { el.style.marginTop = '5px'; });
+      first.style.lineHeight = '1.42';
+      first.querySelectorAll('h3').forEach(el => { el.style.marginTop='5px'; el.style.marginBottom='3px'; el.style.paddingBottom='2px'; });
+      first.querySelectorAll('p').forEach(el => { el.style.marginTop='3px'; el.style.marginBottom='3px'; });
+      first.querySelectorAll('.agreement-bank-box').forEach(el => { el.style.margin='5px 0'; el.style.padding='5px 8px'; });
+      first.querySelectorAll('.agreement-service-list').forEach(el => { el.style.margin='2px 0 4px'; el.style.paddingInlineStart='19px'; });
+      first.querySelectorAll('.agreement-service-list li').forEach(el => { el.style.margin='2px 0'; el.style.lineHeight='1.38'; });
+      first.querySelectorAll('.service-agreement-signatures').forEach(el => { el.style.marginTop='7px'; el.style.gap='10px'; });
+      first.querySelectorAll('.service-agreement-signatures section').forEach(el => { el.style.minHeight='74px'; el.style.padding='6px 8px'; });
+      first.querySelectorAll('.service-agreement-signatures h3').forEach(el => { el.style.margin='0 0 4px'; });
+      first.querySelectorAll('.agreement-sign-line').forEach(el => { el.style.marginTop='7px'; });
+
+      // Use the largest readable font that keeps every clause and both signatures on this A4 page.
+      const available = Math.max(1, first.clientHeight - 2);
+      let low = 10.5, high = 15, best = low;
+      for (let i=0; i<12; i++) {
+        const mid = (low + high) / 2;
+        first.style.fontSize = mid.toFixed(2) + 'px';
+        if (first.scrollHeight <= available) { best = mid; low = mid; }
+        else high = mid;
+      }
+      first.style.fontSize = best.toFixed(2) + 'px';
       renumberAgreementClauses();
     }
 
