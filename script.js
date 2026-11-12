@@ -1867,19 +1867,19 @@ document.addEventListener('DOMContentLoaded', () => {
       first.querySelectorAll('[data-ag-field], .agreement-clause-text').forEach(el => el.setAttribute('contenteditable','true'));
 
       first.style.lineHeight = '1.42';
-      first.querySelectorAll('h3').forEach(el => { el.style.marginTop='5px'; el.style.marginBottom='3px'; el.style.paddingBottom='2px'; });
-      first.querySelectorAll('p').forEach(el => { el.style.marginTop='3px'; el.style.marginBottom='3px'; });
-      first.querySelectorAll('.agreement-bank-box').forEach(el => { el.style.margin='5px 0'; el.style.padding='5px 8px'; });
-      first.querySelectorAll('.agreement-service-list').forEach(el => { el.style.margin='2px 0 4px'; el.style.paddingInlineStart='19px'; });
-      first.querySelectorAll('.agreement-service-list li').forEach(el => { el.style.margin='2px 0'; el.style.lineHeight='1.38'; });
-      first.querySelectorAll('.service-agreement-signatures').forEach(el => { el.style.marginTop='7px'; el.style.gap='10px'; });
-      first.querySelectorAll('.service-agreement-signatures section').forEach(el => { el.style.minHeight='74px'; el.style.padding='6px 8px'; });
-      first.querySelectorAll('.service-agreement-signatures h3').forEach(el => { el.style.margin='0 0 4px'; });
-      first.querySelectorAll('.agreement-sign-line').forEach(el => { el.style.marginTop='7px'; });
+      first.querySelectorAll('h3').forEach(el => { el.style.marginTop='6px'; el.style.marginBottom='4px'; el.style.paddingBottom='2px'; });
+      first.querySelectorAll('p').forEach(el => { el.style.marginTop='4px'; el.style.marginBottom='4px'; });
+      first.querySelectorAll('.agreement-bank-box').forEach(el => { el.style.margin='6px 0'; el.style.padding='6px 9px'; });
+      first.querySelectorAll('.agreement-service-list').forEach(el => { el.style.margin='3px 0 5px'; el.style.paddingInlineStart='20px'; });
+      first.querySelectorAll('.agreement-service-list li').forEach(el => { el.style.margin='3px 0'; el.style.lineHeight='1.4'; });
+      first.querySelectorAll('.service-agreement-signatures').forEach(el => { el.style.marginTop='8px'; el.style.gap='11px'; });
+      first.querySelectorAll('.service-agreement-signatures section').forEach(el => { el.style.minHeight='78px'; el.style.padding='7px 9px'; });
+      first.querySelectorAll('.service-agreement-signatures h3').forEach(el => { el.style.margin='0 0 5px'; });
+      first.querySelectorAll('.agreement-sign-line').forEach(el => { el.style.marginTop='8px'; });
 
-      // Use the largest readable font that keeps every clause and both signatures on this A4 page.
+      // Use a larger readable font and slightly roomier spacing while keeping the complete agreement on one A4 page.
       const available = Math.max(1, first.clientHeight - 2);
-      let low = 10.5, high = 15, best = low;
+      let low = 11, high = 17.5, best = low;
       for (let i=0; i<12; i++) {
         const mid = (low + high) / 2;
         first.style.fontSize = mid.toFixed(2) + 'px';
