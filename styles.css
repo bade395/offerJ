@@ -1475,29 +1475,29 @@ body.agreement-mode #agreement-workspace {
 }
 
 
-/* Single-sheet service agreement: compact layout for all clauses and both signatures. */
+/* Single A4 service agreement — readable dynamic font sizing and clear title spacing. */
 .agreement-live-page.a4-page { break-after:auto !important; page-break-after:auto !important; }
 .agreement-live-page .agreement-print-content {
-  top:35mm !important;
+  top:42mm !important;
   bottom:17mm !important;
-  font-size:9.4px !important;
-  line-height:1.32 !important;
+  font-size:12px;
+  line-height:1.42 !important;
 }
-.agreement-print-content .doc-title-bar { margin-bottom:4px !important; }
-.agreement-print-content .doc-title { font-size:16px !important; }
-.agreement-print-content .service-party-line { margin:3px 0 5px !important; }
-.agreement-print-content h3 { margin:4px 0 2px !important; padding-bottom:1px !important; font-size:10.5px !important; }
-.agreement-print-content p { margin:2px 0 !important; }
-.agreement-print-content .agreement-bank-box { margin:4px 0 !important; padding:4px 7px !important; }
-.agreement-print-content .agreement-service-list { margin:1px 0 3px !important; padding-inline-start:18px !important; }
-.agreement-print-content .agreement-service-list li { margin:1px 0 !important; line-height:1.3 !important; }
-.agreement-print-content .agreement-service-closing { margin-top:4px !important; }
-.agreement-print-content .service-agreement-signatures { margin-top:5px !important; gap:8px !important; }
-.agreement-print-content .service-agreement-signatures section { min-height:66px !important; padding:4px 7px !important; }
-.agreement-print-content .service-agreement-signatures h3 { margin:0 0 3px !important; }
-.agreement-print-content .service-agreement-signatures p { margin:2px 0 !important; }
-.agreement-print-content .agreement-sign-line { margin-top:5px !important; }
+.agreement-print-content .doc-title-bar { margin-top:0 !important; margin-bottom:7px !important; }
+.agreement-print-content .doc-title { font-size:18px !important; }
+.agreement-print-content .service-party-line { margin:5px 0 7px !important; }
+.agreement-print-content h3 { margin:5px 0 3px !important; padding-bottom:2px !important; font-size:11.5px !important; }
+.agreement-print-content p { margin:3px 0 !important; }
+.agreement-print-content .agreement-bank-box { margin:5px 0 !important; padding:5px 8px !important; }
+.agreement-print-content .agreement-service-list { margin:2px 0 4px !important; padding-inline-start:19px !important; }
+.agreement-print-content .agreement-service-list li { margin:2px 0 !important; line-height:1.38 !important; }
+.agreement-print-content .agreement-service-closing { margin-top:6px !important; }
+.agreement-print-content .service-agreement-signatures { margin-top:7px !important; gap:10px !important; }
+.agreement-print-content .service-agreement-signatures section { min-height:74px !important; padding:6px 8px !important; }
+.agreement-print-content .service-agreement-signatures h3 { margin:0 0 4px !important; }
+.agreement-print-content .service-agreement-signatures p { margin:3px 0 !important; }
+.agreement-print-content .agreement-sign-line { margin-top:7px !important; }
 @media print {
   .agreement-live-page.a4-page { break-after:auto !important; page-break-after:auto !important; }
-  .agreement-live-page .agreement-print-content { font-size:9.4px !important; line-height:1.32 !important; }
+  .agreement-live-page .agreement-print-content { top:42mm !important; bottom:17mm !important; }
 }
