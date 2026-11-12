@@ -1461,3 +1461,15 @@ body.agreement-mode #agreement-workspace {
         background: transparent !important;
     }
 }
+
+
+/* Keep contract clauses together while allowing the document to flow between A4 sheets. */
+.agreement-print-content .agreement-flow-block {
+    display: flow-root;
+    break-inside: avoid;
+    page-break-inside: avoid;
+}
+.agreement-print-content .agreement-editable:focus {
+    outline: 1px solid rgba(178,138,32,.55);
+    outline-offset: 2px;
+}
