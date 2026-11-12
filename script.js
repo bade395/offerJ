@@ -1710,6 +1710,7 @@ document.addEventListener('DOMContentLoaded', () => {
       ag('title').value = 'اتفاقية إقرار والتزام مالي';
       ag('city').value = 'الرياض';
       ag('copies').value = 'نسختان أصليتان';
+      if (agreementSheet) agreementSheet.dataset.userEdited = 'false';
       renderAgreementSheet(agreementDataFromForm());
     }
     function agreementClauseText(data) {
@@ -1854,7 +1855,8 @@ document.addEventListener('DOMContentLoaded', () => {
     async function saveAgreement() {
       if (!isManager || !supabaseClient) return;
       const data = agreementDataFromForm();
-      if (!data.custom_html) { alert('تعذر تجهيز نص العقد للحفظ. حدّث الصفحة وحاول مرة أخرى.'); return; }\n      const payload = {agreement_number:data.number,agreement_date:data.date,title:data.title || 'اتفاقية إقرار والتزام مالي',data,updated_at:new Date().toISOString()};
+      if (!data.custom_html) { alert('تعذر تجهيز نص العقد للحفظ. حدّث الصفحة وحاول مرة أخرى.'); return; }
+      const payload = {agreement_number:data.number,agreement_date:data.date,title:data.title || 'اتفاقية إقرار والتزام مالي',data,updated_at:new Date().toISOString()};
       let result;
       if (currentAgreementId) result = await supabaseClient.from('commitment_agreements').update(payload).eq('id',currentAgreementId).select().single();
       else result = await supabaseClient.from('commitment_agreements').insert({...payload,created_by:managerUser.id}).select().single();
