@@ -1853,14 +1853,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!group) { group = document.createElement('div'); group.className = 'agreement-flow-block'; groups.push(group); }
         group.appendChild(node);
       });
-      const continuationTitle = document.createElement('div');
-      continuationTitle.className = 'doc-title-bar';
-      continuationTitle.innerHTML = '<h2 class="doc-title">عقد تقديم خدمات (تكملة)</h2>';
       groups.forEach(block => {
         first.appendChild(block);
         if (first.scrollHeight > first.clientHeight + 2 && first.children.length > 1) {
           first.removeChild(block);
-          if (!second.children.length) second.appendChild(continuationTitle);
           second.appendChild(block);
         }
       });
