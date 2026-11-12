@@ -1745,7 +1745,7 @@ document.addEventListener('DOMContentLoaded', () => {
           <div class="company-logo"><img src="https://i.postimg.cc/Pfm5Rvd0/logo.png" alt="شعار النسر الثاقب" class="official-logo-img"></div>
         </header>`;
       const footer = `<footer class="doc-footer-fixed"><div class="footer-content"><span>العنوان : - الرياض – جدة</span><span class="footer-sep"></span><span>info@nisr.sa</span><span class="footer-sep"></span><span>0501767213 - 0510484749</span></div></footer>`;
-      return `<section class="agreement-live-page a4-page ${continuation ? 'agreement-page-2' : 'agreement-page-1'}">${header}<div class="agreement-print-content" contenteditable="true" spellcheck="false">${content}</div>${footer}</section>`;
+      return `<section class="agreement-live-page a4-page ${continuation ? 'agreement-page-2' : 'agreement-page-1'}">${header}<div class="agreement-print-content" contenteditable="false" spellcheck="false">${content}</div>${footer}</section>`;
     }
 
     function upgradeLegacyAgreementHtml(html) {
@@ -1829,6 +1829,48 @@ document.addEventListener('DOMContentLoaded', () => {
       });
       syncAgreementCompanyNames();
     }
+    function paginateServiceAgreement() {
+      if (!agreementSheet) return;
+      const pages = Array.from(agreementSheet.querySelectorAll('.agreement-live-page'));
+      const firstPage = pages[0], secondPage = pages[1];
+      const first = firstPage?.querySelector('.agreement-print-content');
+      const second = secondPage?.querySelector('.agreement-print-content');
+      if (!first || !second) return;
+      const allNodes = [...first.children, ...second.children];
+      const flat = [];
+      allNodes.forEach(node => {
+        if (node.matches('.doc-title-bar') && /تكملة/.test(node.textContent)) return;
+        if (node.classList.contains('agreement-flow-block')) flat.push(...Array.from(node.childNodes));
+        else flat.push(node);
+      });
+      first.innerHTML = ''; second.innerHTML = '';
+      const title = flat.find(node => node.nodeType === 1 && node.classList?.contains('doc-title-bar'));
+      if (title) first.appendChild(title);
+      const groups = []; let group = null;
+      flat.filter(node => node !== title).forEach(node => {
+        if (node.nodeType === 1 && node.tagName === 'H3') { group = document.createElement('div'); group.className = 'agreement-flow-block'; groups.push(group); }
+        if (!group) { group = document.createElement('div'); group.className = 'agreement-flow-block'; groups.push(group); }
+        group.appendChild(node);
+      });
+      const continuationTitle = document.createElement('div');
+      continuationTitle.className = 'doc-title-bar';
+      continuationTitle.innerHTML = '<h2 class="doc-title">عقد تقديم خدمات (تكملة)</h2>';
+      groups.forEach(block => {
+        first.appendChild(block);
+        if (first.scrollHeight > first.clientHeight + 2 && first.children.length > 1) {
+          first.removeChild(block);
+          if (!second.children.length) second.appendChild(continuationTitle);
+          second.appendChild(block);
+        }
+      });
+      secondPage.style.display = second.querySelector('.agreement-flow-block, .agreement-clause') ? '' : 'none';
+      [first,second].forEach(content => {
+        content.setAttribute('contenteditable','false');
+        content.querySelectorAll('[data-ag-field], .agreement-clause-text').forEach(el => el.setAttribute('contenteditable','true'));
+      });
+      renumberAgreementClauses();
+    }
+
     function syncAgreementCompanyNames(changedField, value) {
       if (!agreementSheet) return;
       if (changedField === 'first-company' || changedField === 'second-company') {
@@ -1950,7 +1992,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function addAgreementClause() {
       if (!isManager || !agreementSheet) return;
-      const content = agreementSheet.querySelector('.agreement-page-2 .agreement-print-content') || agreementSheet.querySelector('.agreement-print-content');
+      const content = agreementSheet.querySelector('.agreement-page-1 .agreement-print-content');
       if (!content) return;
       const clause = document.createElement('p');
       clause.className = 'agreement-clause';
@@ -1958,18 +2000,18 @@ document.addEventListener('DOMContentLoaded', () => {
       number.className = 'agreement-clause-number';
       const text = document.createElement('span');
       text.className = 'agreement-clause-text';
+      text.setAttribute('contenteditable','true');
       text.textContent = 'اكتب نص البند الجديد هنا...';
       clause.append(number, document.createTextNode(' '), text);
-      const signatures = content.querySelector('.agreement-signatures');
-      if (signatures) content.insertBefore(clause, signatures); else content.appendChild(clause);
+      const signature = agreementSheet.querySelector('.agreement-signatures');
+      if (signature) signature.closest('.agreement-flow-block')?.before(clause) || content.appendChild(clause);
+      else content.appendChild(clause);
+      paginateServiceAgreement();
       renumberAgreementClauses();
       agreementSheet.dataset.userEdited = 'true';
-      text.focus?.();
-      const range = document.createRange();
-      range.selectNodeContents(text);
-      const selection = window.getSelection();
-      selection.removeAllRanges();
-      selection.addRange(range);
+      text.focus();
+      const range = document.createRange(); range.selectNodeContents(text);
+      const selection = window.getSelection(); selection.removeAllRanges(); selection.addRange(range);
     }
 
     agreementSheet?.addEventListener('click', event => {
