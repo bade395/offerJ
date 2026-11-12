@@ -1337,3 +1337,65 @@ body.agreement-mode .document-wrapper {
 body.agreement-mode #agreement-workspace {
     display: block !important;
 }
+
+
+/* Service contract template — editable bold fields, consistent across both A4 pages. */
+.agreement-print-content .agreement-editable {
+    display: inline;
+    min-width: 34px;
+    padding: 0 2px;
+    color: #111827;
+    font-weight: 800;
+    border-bottom: 1px dotted #9ca3af;
+    outline: none;
+    cursor: text;
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
+}
+.agreement-print-content .agreement-editable:focus {
+    background: rgba(250, 204, 21, .12);
+    border-bottom: 1px solid #a87912;
+}
+.agreement-print-content .service-party-line { margin: 9px 0 12px; }
+.agreement-print-content .agreement-bank-box {
+    margin: 10px 0;
+    padding: 8px 10px;
+    border: 1px solid #9eacba;
+    border-radius: 4px;
+    background: rgba(255,255,255,.28);
+}
+.agreement-print-content .agreement-bank-box p { margin: 3px 0; }
+.agreement-print-content .agreement-bank-separator { display: inline-block; padding: 0 10px; color: #64748b; }
+.agreement-print-content .agreement-service-list {
+    margin: 3px 0 8px;
+    padding-inline-start: 23px;
+    list-style: disc;
+}
+.agreement-print-content .agreement-service-list li {
+    margin: 3px 0;
+    padding-inline-start: 2px;
+    text-align: justify;
+    line-height: 1.58;
+}
+.agreement-print-content .agreement-service-closing {
+    margin-top: 12px !important;
+    font-weight: 800;
+    text-align: center !important;
+}
+.agreement-print-content .service-agreement-signatures {
+    margin-top: 12px;
+    gap: 14px;
+}
+.agreement-print-content .service-agreement-signatures section {
+    min-height: 105px;
+    padding: 8px 10px;
+}
+.agreement-print-content .service-agreement-signatures h3 { margin: 0 0 8px; }
+.agreement-print-content .service-agreement-signatures p { margin: 5px 0; }
+.agreement-print-content .agreement-sign-line { margin-top: 13px !important; }
+@media print {
+    .agreement-print-content .agreement-editable {
+        border-bottom-color: transparent !important;
+        background: transparent !important;
+    }
+}
