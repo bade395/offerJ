@@ -1079,6 +1079,7 @@ document.addEventListener('DOMContentLoaded', () => {
             let current = makePage();
             for (const sourceNode of sourceNodes) {
                 const node = sourceNode.cloneNode(true);
+                node.querySelectorAll('.no-print, [data-ag-remove-clause]').forEach(el => el.remove());
                 current.content.appendChild(node);
                 await new Promise(resolve => requestAnimationFrame(resolve));
                 if (current.content.scrollHeight > CONTENT_H + 1 && current.content.children.length > 1) {
@@ -1731,7 +1732,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!agreementSheet) return;
       const date = data.date ? new Date(data.date + 'T00:00:00').toLocaleDateString('ar-SA') : '................';
       const party = (name,id,address,phone) => '<div class="agreement-party"><b>' + agEsc(name || '........................') + '</b><div>رقم الهوية / السجل: ' + agEsc(id || '................') + '</div><div>العنوان الوطني: ' + agEsc(address || '................') + '</div><div>التواصل: ' + agEsc(phone || '................') + '</div></div>';
-      const clauses = agreementClauseText(data).map((line,i) => '<p class="agreement-clause"><b>' + (i+1) + '.</b> ' + agEsc(line) + '</p>').join('');
+      const clauses = agreementClauseText(data).map((line,i) => '<p class="agreement-clause"><b class="agreement-clause-number">' + (i+1) + '.</b> <span class="agreement-clause-text">' + agEsc(line) + '</span><button type="button" class="agreement-clause-remove no-print" contenteditable="false" data-ag-remove-clause title="حذف البند" aria-label="حذف البند">×</button></p>').join('');
       const amount = data.kind === 'percentage' ? (data.percent || '....') + '% من ' + (data.basis || '................') : (data.amount || '................') + ' ريال سعودي';
       agreementSheet.dataset.userEdited = 'false';
       agreementSheet.innerHTML = `
@@ -1842,6 +1843,75 @@ document.addEventListener('DOMContentLoaded', () => {
     agreementSheet?.addEventListener('input', event => {
       if (event.target.closest('#agreement-print-sheet')) agreementSheet.dataset.userEdited = 'true';
     });
+
+    function renumberAgreementClauses() {
+      agreementSheet?.querySelectorAll('.agreement-print-content .agreement-clause').forEach((clause,index) => {
+        let number = clause.querySelector('.agreement-clause-number');
+        if (!number) {
+          number = clause.querySelector('b');
+          if (!number) {
+            number = document.createElement('b');
+            clause.prepend(number);
+          }
+          number.classList.add('agreement-clause-number');
+        }
+        number.textContent = (index + 1) + '.';
+        clause.setAttribute('data-clause-index', String(index));
+        if (!clause.querySelector('.agreement-clause-remove')) {
+          const remove = document.createElement('button');
+          remove.type = 'button';
+          remove.className = 'agreement-clause-remove no-print';
+          remove.setAttribute('contenteditable','false');
+          remove.setAttribute('data-ag-remove-clause','');
+          remove.setAttribute('title','حذف البند');
+          remove.setAttribute('aria-label','حذف البند');
+          remove.textContent = '×';
+          clause.appendChild(remove);
+        }
+      });
+    }
+
+    function addAgreementClause() {
+      if (!isManager || !agreementSheet) return;
+      const content = agreementSheet.querySelector('.agreement-print-content');
+      if (!content) return;
+      const clause = document.createElement('p');
+      clause.className = 'agreement-clause';
+      const number = document.createElement('b');
+      number.className = 'agreement-clause-number';
+      const text = document.createElement('span');
+      text.className = 'agreement-clause-text';
+      text.textContent = 'اكتب نص البند الجديد هنا...';
+      clause.append(number, document.createTextNode(' '), text);
+      content.appendChild(clause);
+      renumberAgreementClauses();
+      agreementSheet.dataset.userEdited = 'true';
+      text.focus?.();
+      const range = document.createRange();
+      range.selectNodeContents(text);
+      const selection = window.getSelection();
+      selection.removeAllRanges();
+      selection.addRange(range);
+    }
+
+    agreementSheet?.addEventListener('click', event => {
+      const remove = event.target.closest('[data-ag-remove-clause]');
+      if (!remove) return;
+      event.preventDefault();
+      event.stopPropagation();
+      const clause = remove.closest('.agreement-clause');
+      if (clause && confirm('هل تريد حذف هذا البند؟')) {
+        clause.remove();
+        renumberAgreementClauses();
+        agreementSheet.dataset.userEdited = 'true';
+      }
+    });
+
+    document.getElementById('btn-agreement-add-clause')?.addEventListener('click', addAgreementClause);
+    agreementSheet?.addEventListener('blur', event => {
+      if (event.target.closest('.agreement-print-content')) renumberAgreementClauses();
+    }, true);
+
 
     generateAutoMeta();
     renderItems();
