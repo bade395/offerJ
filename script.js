@@ -1692,7 +1692,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const data = {};
       agreementFields.forEach(key => data[key] = ag(key)?.value?.trim() || '');
       const liveContent = agreementSheet?.querySelector('.agreement-print-content');
-      data.custom_html = agreementSheet?.dataset.userEdited === 'true' && agreementSheet ? agreementSheet.innerHTML : '';
+      data.custom_html = agreementSheet?.dataset.userEdited === 'true' && agreementSheet ? agreementSheet.innerHTML : '';\n      data.template_version = 2;
       return data;
     }
     function fillAgreementForm(data = {}) {
@@ -1771,39 +1771,71 @@ document.addEventListener('DOMContentLoaded', () => {
       return shell(first,'1') + shell(second,'2');
     }
 
-    function renderAgreementSheet(data) {
+    function agreementEditable(field, placeholder) {
+      return '<strong><span class="agreement-editable" contenteditable="true" data-ag-field="' + field + '">' + agEsc(placeholder) + '</span></strong>';
+    }
+    function renderAgreementSheet(data = {}) {
       if (!agreementSheet) return;
-      const date = data.date ? new Date(data.date + 'T00:00:00').toLocaleDateString('ar-SA') : '................';
-      const party = (name,id,address,phone) => '<div class="agreement-party"><b>' + agEsc(name || '........................') + '</b><div>رقم الهوية / السجل: ' + agEsc(id || '................') + '</div><div>العنوان الوطني: ' + agEsc(address || '................') + '</div><div>التواصل: ' + agEsc(phone || '................') + '</div></div>';
-      const clauses = agreementClauseText(data).map((line,i) => '<p class="agreement-clause"><b class="agreement-clause-number">' + (i+1) + '.</b> <span class="agreement-clause-text">' + agEsc(line) + '</span><button type="button" class="agreement-clause-remove no-print" contenteditable="false" data-ag-remove-clause title="حذف البند" aria-label="حذف البند">×</button></p>');
-      const amount = data.kind === 'percentage' ? (data.percent || '....') + '% من ' + (data.basis || '................') : (data.amount || '................') + ' ريال سعودي';
-      const intro = `
-        <div class="doc-title-bar"><h2 class="doc-title">${agEsc(data.title || 'اتفاقية إقرار والتزام مالي')}</h2></div>
-        <div class="agreement-meta"><span>رقم الاتفاقية: <b>${agEsc(data.number || '................')}</b></span><span>التاريخ: <b>${agEsc(date)}</b></span></div>
-        <p>بعون الله وتوفيقه، أبرمت هذه الاتفاقية في مدينة ${agEsc(data.city || '................')} بين كل من:</p>
-        <div class="agreement-parties"><section><b>الطرف الأول (صاحب الحق)</b>${party(data['first-name'],data['first-id'],data['first-address'],data['first-phone'])}</section><section><b>الطرف الثاني (الملتزم)</b>${party(data['second-name'],data['second-id'],data['second-address'],data['second-phone'])}</section></div>
-        <p>ويشار إليهما مجتمعين بـ«الطرفين»، وقد أقر كل منهما بأهليته وصفته وصلاحية ممثله للتعاقد، واتفقا على ما يلي:</p>
-        <h3>موضوع الالتزام</h3><p>${agEsc(data.description || '........................................................')}</p>
-        <p><b>قيمة / أساس الالتزام:</b> ${agEsc(amount)}</p>
-        <p><b>طريقة السداد:</b> ${agEsc(data.payment || '................')}　 <b>أول استحقاق:</b> ${agEsc(data['first-due'] || '................')}</p>
-        <p><b>جدول السداد:</b> ${agEsc(data.schedule || 'وفق المواعيد المتفق عليها كتابةً.')}</p>
-        <p><b>بيانات الحساب البنكي:</b> ${agEsc(data.bank || '........................................................')}</p>
-        <h3>الشروط والأحكام</h3>`;
-      const signatures = `
-        <div class="agreement-signatures"><section><h3>الطرف الأول</h3><p>الاسم: ${agEsc(data['first-name'] || '................')}</p><p>التوقيع: ................................</p><p>التاريخ: ................................</p></section><section><h3>الطرف الثاني</h3><p>الاسم: ${agEsc(data['second-name'] || '................')}</p><p>التوقيع: ................................</p><p>التاريخ: ................................</p></section></div>`;
-      const pageOne = intro + clauses.slice(0,6).join('');
-      const pageTwo = `<div class="doc-title-bar"><h2 class="doc-title">${agEsc(data.title || 'اتفاقية إقرار والتزام مالي')} (تكملة)</h2></div><h3>الشروط والأحكام (تكملة)</h3>` + clauses.slice(6).join('') + signatures;
-      agreementSheet.dataset.userEdited = 'false';
-      agreementSheet.innerHTML = agreementPageShell(pageOne,false) + agreementPageShell(pageTwo,true);
-      if (data.custom_html) {
-        agreementSheet.innerHTML = upgradeLegacyAgreementHtml(data.custom_html);
+      if (data.template_version === 2 && data.custom_html) {
+        agreementSheet.innerHTML = data.custom_html;
+        agreementSheet.dataset.userEdited = 'true';
+      } else {
+        const first = agreementEditable('first-company', data['first-name'] || 'ادخل اسم الشركة');
+        const second = agreementEditable('second-company', data['second-name'] || 'ادخل اسم الشركة');
+        const firstRep = agreementEditable('first-representative', 'ادخل اسم الممثل');
+        const secondRep = agreementEditable('second-representative', 'ادخل اسم الممثل');
+        const firstId = agreementEditable('first-unified-id', 'ادخل الرقم الموحد');
+        const secondId = agreementEditable('second-unified-id', 'ادخل الرقم الموحد');
+        const project = agreementEditable('project-name', 'ادخل اسم المشروع');
+        const amountOne = agreementEditable('amount-one', 'ادخل المبلغ');
+        const amountTwo = agreementEditable('amount-two', 'ادخل المبلغ');
+        const beneficiary = agreementEditable('bank-beneficiary', 'ادخل اسم المستفيد / الشركة');
+        const bank = agreementEditable('bank-name', 'ادخل اسم البنك');
+        const iban = agreementEditable('iban', 'ادخل رقم الايبان');
+        const pageOne = `
+          <div class="doc-title-bar"><h2 class="doc-title">عقد تقديم خدمات</h2></div>
+          <p class="service-party-line"><b>الطرف الأول:</b> الاسم: ${first}، سجل تجاري الرقم الموحد ${firstId}، ويشار إليها فيما بعد بـ "الطرف الأول".</p>
+          <p class="service-party-line"><b>الطرف الثاني:</b> الاسم: ${second}، الرقم الوطني الموحد ${secondId}، ويشار إليه فيما بعد بـ "الطرف الثاني".</p>
+          <h3>التمهيد:</h3>
+          <p>نقر نحن الطرف الأول (${agreementEditable('first-company',data['first-name'] || 'ادخل اسم الشركة')}) بأن الطرف الثاني (${agreementEditable('second-company',data['second-name'] || 'ادخل اسم الشركة')}) قدم الخدمات الاستشارية وساهم بنجاح في توقيع عقد مشروع وتنفيذ أعمال (${project}).</p>
+          <p>وعليه يتفق الطرفان على الأتعاب الموكلة للطرف الثاني بعد توقيع عقد المشروع حسب البنود التالية:</p>
+          <h3>البند الأول: أتعاب الطرف الثاني:</h3>
+          <p>1- يلتزم الطرف الأول بأن يدفع للطرف الثاني مبلغ (${amountOne}) بعد توقيع العقد واستلام الموقع، والباقي مع أول مستخلص للمقدمة وهي (${amountTwo})، ويحق للطرف الثاني المطالبة بأتعابه وحقوقه من خلال الجهات المختصة بحال التمنع أو التأخر في الدفع، ويتم تحويل مستحقات الطرف الثاني بحد أقصاه (7) أيام من استلام الدفعة المقدمة.</p>
+          <div class="agreement-bank-box"><p><b>الحساب البنكي لـ</b> ${beneficiary}</p><p><b>اسم البنك:</b> ${bank} <span class="agreement-bank-separator">|</span> <b>رقم الآيبان:</b> ${iban}</p></div>
+          <p>2- "الطرف الأول" غير ملزم بدفع أي مستحقات لـ "الطرف الثاني" إن لم يتم الاتفاق على المشروع مع المالك أو أي جهة تنوب عنه أو تمثله في المشروع المذكور، ولا يحق لأي طرف ممن ذكروا بهذه الاتفاقية بأي مطالبة مالية ويكون هذا الاتفاق ملغياً.</p>
+        `;
+        const pageTwo = `
+          <div class="doc-title-bar"><h2 class="doc-title">عقد تقديم خدمات (تكملة)</h2></div>
+          <h3>البند الثالث: عدم الإفصاح المتبادل والسرية، اتفاقية عدم المنافسة:</h3>
+          <p>يوافق الطرف المتلقي على استخدام المعلومات السرية، بما في ذلك المعلومات الفنية السرية، لهذا الغرض فقط وليس لأي استخدام آخر دون موافقة خطية مسبقة من الطرف المفصح. ولا يجوز له استغلال أو تسويق أو مساعدة الآخرين في استخدام هذه المعلومات، بما في ذلك في ترتيبات سلسلة القيمة أو توزيع المنتجات أو تقاسم الإيرادات. ويقتصر الإفصاح على الممثلين الذين يحتاجون إلى المعرفة، والذين يتم إبلاغهم بشروط السرية هذه وملزمين بها. وسيبذل الطرف المتلقي قصارى جهده للحفاظ على سرية هذه المعلومات.</p>
+          <h3>البند الرابع: النزاعات</h3>
+          <ul class="agreement-service-list"><li>في حال نشوء أي نزاع بين الطرفين، يتم محاولة حله بالطرق الودية.</li><li>إذا لم يُحل النزاع خلال (15) يوماً، يتم اللجوء إلى محاكم المملكة العربية السعودية للفصل فيه.</li><li>يتحمل الطرف الخاسر في النزاع جميع التكاليف القانونية وأتعاب المحاماة.</li></ul>
+          <h3>البند الخامس: أحكام عامة</h3>
+          <ul class="agreement-service-list"><li>أي تعديل لهذا العقد يجب أن يكون بموافقة خطية من الأطراف.</li><li>جميع الوثائق والمعلومات المتبادلة تعتبر سرية ولا يجوز الإفصاح عنها إلا بموافقة خطية.</li><li>تمت كتابة هذا العقد من نسختين أصليتين، سُلمت لكل طرف نسخة للعمل بموجبها.</li><li>تتم جميع المراسلات والإشعارات بين الأطراف وفق العناوين المذكورة في صدر هذا العقد.</li><li>يلتزم الطرفان بالعمل بحسن نية خلال تنفيذ هذا العقد.</li></ul>
+          <p class="agreement-service-closing">والله الموفق،،،</p>
+          <div class="agreement-signatures service-agreement-signatures">
+            <section><h3>الطرف الأول:</h3><p>${agreementEditable('first-company',data['first-name'] || 'ادخل اسم الشركة')}</p><p>الممثل: ${firstRep}</p><p class="agreement-sign-line">التوقيع والختم: ....................................</p></section>
+            <section><h3>الطرف الثاني:</h3><p>${agreementEditable('second-company',data['second-name'] || 'ادخل اسم الشركة')}</p><p>الممثل: ${secondRep}</p><p class="agreement-sign-line">التوقيع والختم: ....................................</p></section>
+          </div>
+        `;
+        agreementSheet.innerHTML = agreementPageShell(pageOne,false) + agreementPageShell(pageTwo,true);
         agreementSheet.dataset.userEdited = 'true';
       }
-      agreementSheet.querySelectorAll('.agreement-print-content').forEach(content => {
-        content.setAttribute('contenteditable','true');
-        content.setAttribute('spellcheck','false');
+      agreementSheet.querySelectorAll('.agreement-print-content').forEach(el => {
+        el.setAttribute('contenteditable','true');
+        el.setAttribute('spellcheck','false');
       });
-      renumberAgreementClauses();
+      syncAgreementCompanyNames();
+    }
+    function syncAgreementCompanyNames(changedField, value) {
+      if (!agreementSheet) return;
+      if (changedField === 'first-company' || changedField === 'second-company') {
+        agreementSheet.querySelectorAll('[data-ag-field="' + changedField + '"]').forEach(node => {
+          if (node !== document.activeElement && node.textContent !== value) node.textContent = value;
+        });
+        const formField = ag(changedField === 'first-company' ? 'first-name' : 'second-name');
+        if (formField) formField.value = value;
+      }
     }
     async function loadAgreements() {
       if (!isManager || !supabaseClient) return;
@@ -1822,10 +1854,7 @@ document.addEventListener('DOMContentLoaded', () => {
     async function saveAgreement() {
       if (!isManager || !supabaseClient) return;
       const data = agreementDataFromForm();
-      if (!data.custom_html && (!data.number || !data.date || !data['first-name'] || !data['second-name'] || !data.description || !data.schedule)) { alert('يرجى استكمال رقم الاتفاقية والتاريخ وبيانات الطرفين وسبب الالتزام وجدول السداد.'); return; }
-      if (!data.custom_html && data.kind === 'fixed' && !(Number(data.amount) > 0)) { alert('أدخل مبلغ الالتزام الثابت بصورة صحيحة.'); ag('amount').focus(); return; }
-      if (!data.custom_html && data.kind === 'percentage' && (!(Number(data.percent) > 0) || !data.basis)) { alert('أدخل النسبة المئوية وحدد أساس احتسابها بوضوح.'); ag('percent').focus(); return; }
-      const payload = {agreement_number:data.number,agreement_date:data.date,title:data.title || 'اتفاقية إقرار والتزام مالي',data,updated_at:new Date().toISOString()};
+      if (!data.custom_html) { alert('تعذر تجهيز نص العقد للحفظ. حدّث الصفحة وحاول مرة أخرى.'); return; }\n      const payload = {agreement_number:data.number,agreement_date:data.date,title:data.title || 'اتفاقية إقرار والتزام مالي',data,updated_at:new Date().toISOString()};
       let result;
       if (currentAgreementId) result = await supabaseClient.from('commitment_agreements').update(payload).eq('id',currentAgreementId).select().single();
       else result = await supabaseClient.from('commitment_agreements').insert({...payload,created_by:managerUser.id}).select().single();
@@ -1884,7 +1913,9 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     agreementForm?.addEventListener('input',()=>renderAgreementSheet(agreementDataFromForm()));
     agreementSheet?.addEventListener('input', event => {
-      if (event.target.closest('#agreement-print-sheet')) agreementSheet.dataset.userEdited = 'true';
+      const editable = event.target.closest('[data-ag-field]');
+      if (editable) syncAgreementCompanyNames(editable.dataset.agField, editable.textContent.trim());
+      agreementSheet.dataset.userEdited = 'true';
     });
 
     function renumberAgreementClauses() {
