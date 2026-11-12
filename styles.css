@@ -1323,3 +1323,17 @@ body.agreement-mode .brand-badge span { font-size:1rem; }
  body.agreement-mode .agreement-live-page.a4-page { display:block !important; width:210mm !important; height:297mm !important; margin:0 !important; box-shadow:none !important; border:0 !important; }
  body.agreement-mode .agreement-clause-remove { display:none !important; }
 }
+
+
+/* Keep the quotation document completely out of the agreements workspace. */
+body.agreement-mode #document-to-pdf,
+body.agreement-mode .document-wrapper {
+    display: none !important;
+    visibility: hidden !important;
+    height: 0 !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+}
+body.agreement-mode #agreement-workspace {
+    display: block !important;
+}
