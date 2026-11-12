@@ -1761,6 +1761,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       agreementSheet.setAttribute('contenteditable', 'true');
       agreementSheet.setAttribute('spellcheck', 'false');
+      renumberAgreementClauses();
     }
     async function loadAgreements() {
       if (!isManager || !supabaseClient) return;
