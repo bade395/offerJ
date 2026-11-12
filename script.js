@@ -1692,7 +1692,8 @@ document.addEventListener('DOMContentLoaded', () => {
       const data = {};
       agreementFields.forEach(key => data[key] = ag(key)?.value?.trim() || '');
       const liveContent = agreementSheet?.querySelector('.agreement-print-content');
-      data.custom_html = agreementSheet?.dataset.userEdited === 'true' && agreementSheet ? agreementSheet.innerHTML : '';\n      data.template_version = 2;
+      data.custom_html = agreementSheet?.dataset.userEdited === 'true' && agreementSheet ? agreementSheet.innerHTML : '';
+      data.template_version = 2;
       return data;
     }
     function fillAgreementForm(data = {}) {
@@ -1707,7 +1708,7 @@ document.addEventListener('DOMContentLoaded', () => {
       document.getElementById('agreement-id').value = '';
       ag('date').value = new Date().toISOString().slice(0,10);
       ag('number').value = 'AGR-' + new Date().toISOString().slice(0,10).replace(/-/g,'') + '-' + Math.floor(100 + Math.random()*900);
-      ag('title').value = 'اتفاقية إقرار والتزام مالي';
+      ag('title').value = 'عقد تقديم خدمات';
       ag('city').value = 'الرياض';
       ag('copies').value = 'نسختان أصليتان';
       if (agreementSheet) agreementSheet.dataset.userEdited = 'false';
