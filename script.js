@@ -1824,9 +1824,10 @@ document.addEventListener('DOMContentLoaded', () => {
         agreementSheet.dataset.userEdited = 'true';
       }
       agreementSheet.querySelectorAll('.agreement-print-content').forEach(el => {
-        el.setAttribute('contenteditable','true');
+        el.setAttribute('contenteditable','false');
         el.setAttribute('spellcheck','false');
       });
+      paginateServiceAgreement();
       syncAgreementCompanyNames();
     }
     function paginateServiceAgreement() {
@@ -1961,6 +1962,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const editable = event.target.closest('[data-ag-field]');
       if (editable) syncAgreementCompanyNames(editable.dataset.agField, editable.textContent.trim());
       agreementSheet.dataset.userEdited = 'true';
+      paginateServiceAgreement();
     });
 
     function renumberAgreementClauses() {
