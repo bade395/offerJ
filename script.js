@@ -1044,11 +1044,11 @@ document.addEventListener('DOMContentLoaded', () => {
         stage.appendChild(style);
         document.body.appendChild(stage);
 
-        const makePage = () => {
+        const makePage = (sourcePage) => {
             const page = document.createElement('div');
             page.className = 'agreement-pdf-page';
-            const header = agreementSheet.querySelector('.doc-header-fixed')?.cloneNode(true);
-            const footer = agreementSheet.querySelector('.doc-footer-fixed')?.cloneNode(true);
+            const header = sourcePage?.querySelector('.doc-header-fixed')?.cloneNode(true);
+            const footer = sourcePage?.querySelector('.doc-footer-fixed')?.cloneNode(true);
             const content = document.createElement('div');
             content.className = 'agreement-pdf-content';
             if (header) { header.className += ' agreement-pdf-header'; page.appendChild(header); }
@@ -1071,20 +1071,28 @@ document.addEventListener('DOMContentLoaded', () => {
         };
 
         try {
-            const sourceContent = agreementSheet.querySelector('.agreement-print-content');
-            if (!sourceContent) throw new Error('محتوى الاتفاقية غير موجود');
-            const sourceNodes = Array.from(sourceContent.children);
-            if (!sourceNodes.length) throw new Error('لا توجد بنود لتصديرها');
+            const livePages = Array.from(agreementSheet.querySelectorAll('.agreement-live-page'));
+            if (!livePages.length) throw new Error('صفحات الاتفاقية غير موجودة');
+            const sourceEntries = livePages.flatMap((sourcePage,pageIndex) =>
+                Array.from(sourcePage.querySelector('.agreement-print-content')?.children || [])
+                    .map(node => ({node,sourcePage,pageIndex}))
+            );
+            if (!sourceEntries.length) throw new Error('لا توجد بنود لتصديرها');
 
-            let current = makePage();
-            for (const sourceNode of sourceNodes) {
-                const node = sourceNode.cloneNode(true);
+            let current = null;
+            let activeSourcePage = -1;
+            for (const entry of sourceEntries) {
+                if (!current || entry.pageIndex !== activeSourcePage) {
+                    current = makePage(entry.sourcePage);
+                    activeSourcePage = entry.pageIndex;
+                }
+                const node = entry.node.cloneNode(true);
                 node.querySelectorAll('.no-print, [data-ag-remove-clause]').forEach(el => el.remove());
                 current.content.appendChild(node);
                 await new Promise(resolve => requestAnimationFrame(resolve));
                 if (current.content.scrollHeight > CONTENT_H + 1 && current.content.children.length > 1) {
                     current.content.removeChild(node);
-                    current = makePage();
+                    current = makePage(entry.sourcePage);
                     current.content.appendChild(node);
                     await new Promise(resolve => requestAnimationFrame(resolve));
                 }
@@ -1728,39 +1736,73 @@ document.addEventListener('DOMContentLoaded', () => {
       if (data.evidence) clauses.push('المستندات المؤيدة للالتزام: ' + data.evidence);
       return clauses;
     }
+    function agreementPageShell(content, continuation = false) {
+      const header = `
+        <header class="doc-header-fixed">
+          <div class="company-brand"><h1 class="company-title">النسر الثاقب</h1><p class="company-sub">السجل التجاري 7054465872</p><p class="company-sub">الرقم الضريبي 314823033100003</p></div>
+          <div class="company-logo"><img src="https://i.postimg.cc/Pfm5Rvd0/logo.png" alt="شعار النسر الثاقب" class="official-logo-img"></div>
+        </header>`;
+      const footer = `<footer class="doc-footer-fixed"><div class="footer-content"><span>العنوان : - الرياض – جدة</span><span class="footer-sep"></span><span>info@nisr.sa</span><span class="footer-sep"></span><span>0501767213 - 0510484749</span></div></footer>`;
+      return `<section class="agreement-live-page a4-page ${continuation ? 'agreement-page-2' : 'agreement-page-1'}">${header}<div class="agreement-print-content" contenteditable="true" spellcheck="false">${content}</div>${footer}</section>`;
+    }
+
+    function upgradeLegacyAgreementHtml(html) {
+      const temp = document.createElement('div');
+      temp.innerHTML = html;
+      if (temp.querySelectorAll('.agreement-live-page').length >= 2) return html;
+      const oldContent = temp.querySelector('.agreement-print-content');
+      if (!oldContent) return html;
+      const nodes = Array.from(oldContent.children);
+      const clauseIndexes = nodes.reduce((list,node,index) => node.classList.contains('agreement-clause') ? [...list,index] : list, []);
+      const splitAt = clauseIndexes.length > 6 ? clauseIndexes[5] + 1 : Math.max(1, Math.ceil(nodes.length / 2));
+      const first = document.createElement('div');
+      const second = document.createElement('div');
+      nodes.forEach((node,index) => (index < splitAt ? first : second).appendChild(node));
+      const title = first.querySelector('.doc-title-bar');
+      if (title) {
+        const secondTitle = title.cloneNode(true);
+        const heading = secondTitle.querySelector('.doc-title');
+        if (heading) heading.textContent += ' (تكملة)';
+        second.prepend(secondTitle);
+      }
+      const oldHeader = temp.querySelector('.doc-header-fixed')?.outerHTML || '';
+      const oldFooter = temp.querySelector('.doc-footer-fixed')?.outerHTML || '';
+      const shell = (body,number) => `<section class="agreement-live-page a4-page agreement-page-${number}">${oldHeader}<div class="agreement-print-content" contenteditable="true" spellcheck="false">${body.innerHTML}</div>${oldFooter}</section>`;
+      return shell(first,'1') + shell(second,'2');
+    }
+
     function renderAgreementSheet(data) {
       if (!agreementSheet) return;
       const date = data.date ? new Date(data.date + 'T00:00:00').toLocaleDateString('ar-SA') : '................';
       const party = (name,id,address,phone) => '<div class="agreement-party"><b>' + agEsc(name || '........................') + '</b><div>رقم الهوية / السجل: ' + agEsc(id || '................') + '</div><div>العنوان الوطني: ' + agEsc(address || '................') + '</div><div>التواصل: ' + agEsc(phone || '................') + '</div></div>';
-      const clauses = agreementClauseText(data).map((line,i) => '<p class="agreement-clause"><b class="agreement-clause-number">' + (i+1) + '.</b> <span class="agreement-clause-text">' + agEsc(line) + '</span><button type="button" class="agreement-clause-remove no-print" contenteditable="false" data-ag-remove-clause title="حذف البند" aria-label="حذف البند">×</button></p>').join('');
+      const clauses = agreementClauseText(data).map((line,i) => '<p class="agreement-clause"><b class="agreement-clause-number">' + (i+1) + '.</b> <span class="agreement-clause-text">' + agEsc(line) + '</span><button type="button" class="agreement-clause-remove no-print" contenteditable="false" data-ag-remove-clause title="حذف البند" aria-label="حذف البند">×</button></p>');
       const amount = data.kind === 'percentage' ? (data.percent || '....') + '% من ' + (data.basis || '................') : (data.amount || '................') + ' ريال سعودي';
+      const intro = `
+        <div class="doc-title-bar"><h2 class="doc-title">${agEsc(data.title || 'اتفاقية إقرار والتزام مالي')}</h2></div>
+        <div class="agreement-meta"><span>رقم الاتفاقية: <b>${agEsc(data.number || '................')}</b></span><span>التاريخ: <b>${agEsc(date)}</b></span></div>
+        <p>بعون الله وتوفيقه، أبرمت هذه الاتفاقية في مدينة ${agEsc(data.city || '................')} بين كل من:</p>
+        <div class="agreement-parties"><section><b>الطرف الأول (صاحب الحق)</b>${party(data['first-name'],data['first-id'],data['first-address'],data['first-phone'])}</section><section><b>الطرف الثاني (الملتزم)</b>${party(data['second-name'],data['second-id'],data['second-address'],data['second-phone'])}</section></div>
+        <p>ويشار إليهما مجتمعين بـ«الطرفين»، وقد أقر كل منهما بأهليته وصفته وصلاحية ممثله للتعاقد، واتفقا على ما يلي:</p>
+        <h3>موضوع الالتزام</h3><p>${agEsc(data.description || '........................................................')}</p>
+        <p><b>قيمة / أساس الالتزام:</b> ${agEsc(amount)}</p>
+        <p><b>طريقة السداد:</b> ${agEsc(data.payment || '................')}　 <b>أول استحقاق:</b> ${agEsc(data['first-due'] || '................')}</p>
+        <p><b>جدول السداد:</b> ${agEsc(data.schedule || 'وفق المواعيد المتفق عليها كتابةً.')}</p>
+        <p><b>بيانات الحساب البنكي:</b> ${agEsc(data.bank || '........................................................')}</p>
+        <h3>الشروط والأحكام</h3>`;
+      const signatures = `
+        <div class="agreement-signatures"><section><h3>الطرف الأول</h3><p>الاسم: ${agEsc(data['first-name'] || '................')}</p><p>التوقيع: ................................</p><p>التاريخ: ................................</p></section><section><h3>الطرف الثاني</h3><p>الاسم: ${agEsc(data['second-name'] || '................')}</p><p>التوقيع: ................................</p><p>التاريخ: ................................</p></section></div>`;
+      const pageOne = intro + clauses.slice(0,6).join('');
+      const pageTwo = `<div class="doc-title-bar"><h2 class="doc-title">${agEsc(data.title || 'اتفاقية إقرار والتزام مالي')} (تكملة)</h2></div><h3>الشروط والأحكام (تكملة)</h3>` + clauses.slice(6).join('') + signatures;
       agreementSheet.dataset.userEdited = 'false';
-      agreementSheet.innerHTML = `
-        <header class="doc-header-fixed">
-          <div class="company-brand"><h1 class="company-title">النسر الثاقب</h1><p class="company-sub">السجل التجاري 7054465872</p><p class="company-sub">الرقم الضريبي 314823033100003</p></div>
-          <div class="company-logo"><img src="https://i.postimg.cc/Pfm5Rvd0/logo.png" alt="شعار النسر الثاقب" class="official-logo-img"></div>
-        </header>
-        <div class="agreement-print-content">
-          <div class="doc-title-bar"><h2 class="doc-title">${agEsc(data.title || 'اتفاقية إقرار والتزام مالي')}</h2></div>
-          <div class="agreement-meta"><span>رقم الاتفاقية: <b>${agEsc(data.number || '................')}</b></span><span>التاريخ: <b>${agEsc(date)}</b></span></div>
-          <p>بعون الله وتوفيقه، أبرمت هذه الاتفاقية في مدينة ${agEsc(data.city || '................')} بين كل من:</p>
-          <div class="agreement-parties"><section><b>الطرف الأول (صاحب الحق)</b>${party(data['first-name'],data['first-id'],data['first-address'],data['first-phone'])}</section><section><b>الطرف الثاني (الملتزم)</b>${party(data['second-name'],data['second-id'],data['second-address'],data['second-phone'])}</section></div>
-          <p>ويشار إليهما مجتمعين بـ«الطرفين»، وقد أقر كل منهما بأهليته وصفته وصلاحية ممثله للتعاقد، واتفقا على ما يلي:</p>
-          <h3>موضوع الالتزام</h3><p>${agEsc(data.description || '........................................................')}</p>
-          <p><b>قيمة / أساس الالتزام:</b> ${agEsc(amount)}</p>
-          <p><b>طريقة السداد:</b> ${agEsc(data.payment || '................')}　 <b>أول استحقاق:</b> ${agEsc(data['first-due'] || '................')}</p>
-          <p><b>جدول السداد:</b> ${agEsc(data.schedule || 'وفق المواعيد المتفق عليها كتابةً.')}</p>
-          <p><b>بيانات الحساب البنكي:</b> ${agEsc(data.bank || '........................................................')}</p>
-          <h3>الشروط والأحكام</h3>${clauses}
-          <div class="agreement-signatures"><section><h3>الطرف الأول</h3><p>الاسم: ${agEsc(data['first-name'] || '................')}</p><p>التوقيع: ................................</p><p>التاريخ: ................................</p></section><section><h3>الطرف الثاني</h3><p>الاسم: ${agEsc(data['second-name'] || '................')}</p><p>التوقيع: ................................</p><p>التاريخ: ................................</p></section></div>
-        </div>
-        <footer class="doc-footer-fixed"><div class="footer-content"><span>العنوان : - الرياض – جدة</span><span class="footer-sep"></span><span>info@nisr.sa</span><span class="footer-sep"></span><span>0501767213 - 0510484749</span></div></footer>`;
+      agreementSheet.innerHTML = agreementPageShell(pageOne,false) + agreementPageShell(pageTwo,true);
       if (data.custom_html) {
-        agreementSheet.innerHTML = data.custom_html;
+        agreementSheet.innerHTML = upgradeLegacyAgreementHtml(data.custom_html);
         agreementSheet.dataset.userEdited = 'true';
       }
-      agreementSheet.setAttribute('contenteditable', 'true');
-      agreementSheet.setAttribute('spellcheck', 'false');
+      agreementSheet.querySelectorAll('.agreement-print-content').forEach(content => {
+        content.setAttribute('contenteditable','true');
+        content.setAttribute('spellcheck','false');
+      });
       renumberAgreementClauses();
     }
     async function loadAgreements() {
@@ -1874,7 +1916,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function addAgreementClause() {
       if (!isManager || !agreementSheet) return;
-      const content = agreementSheet.querySelector('.agreement-print-content');
+      const content = agreementSheet.querySelector('.agreement-page-2 .agreement-print-content') || agreementSheet.querySelector('.agreement-print-content');
       if (!content) return;
       const clause = document.createElement('p');
       clause.className = 'agreement-clause';
@@ -1884,7 +1926,8 @@ document.addEventListener('DOMContentLoaded', () => {
       text.className = 'agreement-clause-text';
       text.textContent = 'اكتب نص البند الجديد هنا...';
       clause.append(number, document.createTextNode(' '), text);
-      content.appendChild(clause);
+      const signatures = content.querySelector('.agreement-signatures');
+      if (signatures) content.insertBefore(clause, signatures); else content.appendChild(clause);
       renumberAgreementClauses();
       agreementSheet.dataset.userEdited = 'true';
       text.focus?.();
