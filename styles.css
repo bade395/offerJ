@@ -1827,3 +1827,103 @@ body.agreement-mode #agreement-print-sheet .agreement-signatures { display:grid;
 @media(max-width:1000px) { body.agreement-mode .agreement-editor { width:100%; } body.agreement-mode #agreement-print-sheet.agreement-print-sheet { width:100%; } }
 @media(max-width:650px) { body.agreement-mode #agreement-print-sheet.agreement-print-sheet { padding:35mm 7mm 22mm; background-size:100% 297mm !important; } body.agreement-mode #agreement-print-sheet .doc-header-fixed { left:7mm; right:7mm; } body.agreement-mode #agreement-print-sheet .agreement-parties,body.agreement-mode #agreement-print-sheet .agreement-signatures { grid-template-columns:1fr; } }
 @media print { body.agreement-mode .agreement-input-page { display:none !important; } body.agreement-mode #agreement-print-sheet.agreement-print-sheet { display:none !important; } }
+
+
+/* Agreement editor: one source-like A4 document, matching the quotation workspace. */
+body.agreement-mode #agreement-workspace {
+  padding: 18px 18px 42px;
+  background: #eef1f5;
+}
+body.agreement-mode .agreement-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  max-width: 1200px;
+  margin: 0 auto 18px;
+  box-shadow: 0 4px 16px rgba(15,23,42,.08);
+}
+body.agreement-mode .agreement-layout {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  gap: 16px !important;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+body.agreement-mode .agreement-list-panel {
+  order: 2;
+  width: 100%;
+  box-sizing: border-box;
+}
+body.agreement-mode .agreement-editor {
+  order: 1;
+  width: 100%;
+  box-sizing: border-box;
+}
+body.agreement-mode #agreement-print-sheet.agreement-print-sheet {
+  width: 210mm !important;
+  max-width: 100% !important;
+  min-height: 297mm;
+  margin: 0 auto 24px;
+  padding: 39mm 16mm 25mm;
+  box-sizing: border-box;
+  background: #fff url('https://i.postimg.cc/Bbs40NJc/alkhlfyt.jpg') top center / 100% 297mm repeat-y !important;
+  box-shadow: 0 8px 28px rgba(15,23,42,.16);
+  border: 1px solid #d8dee8;
+}
+body.agreement-mode #agreement-print-sheet .agreement-print-content {
+  min-height: 190mm;
+  font-family: 'Tajawal', Arial, sans-serif;
+  font-size: 12px;
+  line-height: 1.8;
+}
+body.agreement-mode #agreement-print-sheet .agreement-clause {
+  position: relative;
+  padding: 3px 28px 3px 28px;
+  border-radius: 4px;
+  transition: background .15s ease;
+}
+body.agreement-mode #agreement-print-sheet .agreement-clause:focus-within {
+  background: rgba(178,138,32,.055);
+}
+body.agreement-mode #agreement-print-sheet .agreement-clause-number {
+  display: inline-block;
+  min-width: 22px;
+  color: #8a6b16;
+}
+body.agreement-mode #agreement-print-sheet .agreement-clause-text {
+  outline: none;
+}
+body.agreement-mode #agreement-print-sheet .agreement-clause-remove {
+  position: absolute;
+  inset-inline-start: 0;
+  top: 2px;
+  width: 22px;
+  height: 22px;
+  border: 0;
+  border-radius: 50%;
+  background: #fee2e2;
+  color: #991b1b;
+  cursor: pointer;
+  font: 700 17px/1 Arial, sans-serif;
+}
+body.agreement-mode #agreement-print-sheet .agreement-clause-remove:hover {
+  background: #fecaca;
+}
+@media(max-width:650px) {
+  body.agreement-mode #agreement-workspace { padding: 10px 6px 28px; }
+  body.agreement-mode .agreement-toolbar { position: static; padding: 12px; }
+  body.agreement-mode .agreement-toolbar-actions { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); width:100%; }
+  body.agreement-mode #agreement-print-sheet.agreement-print-sheet {
+    width: 100% !important;
+    padding: 35mm 7mm 22mm;
+    background-size: 100% 297mm !important;
+  }
+  body.agreement-mode #agreement-print-sheet .agreement-clause { padding-inline: 24px; }
+}
+@media print {
+  body.agreement-mode #agreement-workspace { background:transparent !important; padding:0 !important; }
+  body.agreement-mode .agreement-toolbar,
+  body.agreement-mode .agreement-list-panel,
+  body.agreement-mode .agreement-clause-remove { display:none !important; }
+}
